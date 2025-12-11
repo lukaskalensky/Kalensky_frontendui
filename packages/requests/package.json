@@ -13,7 +13,7 @@
     "react-router": "^7.0.2",
     "react-redux": "^9.2.0",
 
-    "@hello-pangea/dnd": "^17.0.0",
+    "@hello-pangea/dnd": "^18.0.1",
 
     "@hrbolek/uoisfrontend-shared": "*",
     "@hrbolek/uoisfrontend-gql-shared": "*",

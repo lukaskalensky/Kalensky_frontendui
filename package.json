@@ -14,10 +14,8 @@
     "create:scalars4": "node scripts/createscalars4.js",
     "listtree": "node scripts/listTree.js",
     "create:filter": "node scripts/generatefilterform.js",
-
     "build:apps": "npm workspaces foreach --include=apps/* npm run build",
     "publish:packages": "npm workspaces foreach --include=packages/* npm publish --access public"
-    
   },
   "keywords": [],
   "author": "",
@@ -28,12 +26,19 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@vitest/ui": "^4.0.15",
+    "happy-dom": "^20.0.11",
     "jsdoc": "^4.0.4",
+    "jsdom": "^27.0.1",
+    "npm-check-updates": "^19.2.0",
     "vite-plugin-compression": "^0.5.1",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^4.0.15"
   },
   "dependencies": {
     "classnames": "^2.5.1",
-    "react-bootstrap": "^2.10.6"
+    "react-bootstrap": "^2.10.10"
   }
 }

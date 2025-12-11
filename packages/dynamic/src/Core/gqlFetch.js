@@ -51,7 +51,7 @@ export async function fetchGraphQL(endpoint, request, options = {}) {
     try {
         json = await res.json();
     } catch (e) {
-        throw new GraphQLHttpError(
+        throw new GraphQLResponseError(
             `GraphQL endpoint returned non-JSON response (${res.status})`,
             res,
             null

@@ -41,6 +41,7 @@ export default defineConfig({
     preserveSymlinks: true, // Prevents breaking symbolic links, useful for monorepos
     alias: {
       // Define aliases for modules, resolving them to specific paths
+      "@hrbolek/uoisfrontend-dynamic": path.resolve(__dirname, "../../packages/dynamic/src"),
       "@hrbolek/uoisfrontend-shared": path.resolve(__dirname, "../../packages/shared/src"),
       "@hrbolek/uoisfrontend-gql-shared": path.resolve(__dirname, "../../packages/gql_shared/src"),
       "@hrbolek/uoisfrontend-admissions": path.resolve(__dirname, "../../packages/admissions/src"),

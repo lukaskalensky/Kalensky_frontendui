@@ -1,3 +1,3 @@
 export * from './createFetchQuery'
-export * from './gqlClient'
+export * from './gqlClient2'
 export * from './gqlFetch'

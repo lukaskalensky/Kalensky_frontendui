@@ -1,4 +1,3 @@
-// gqlClient.js
 import { fetchGraphQL, GraphQLResponseError } from "./gqlFetch";
 
 /**
@@ -106,7 +105,7 @@ export function createGraphQLClient(options) {
             },
         });
 
-        if (res.errors && res.errors.length) {
+        if (res?.errors && res.errors.length) {
             if (onGraphQLErrors) {
                 onGraphQLErrors(res.errors, res);
             }
@@ -117,7 +116,7 @@ export function createGraphQLClient(options) {
             );
         }
 
-        return res.data;
+        return res;
     };
 
     const query = (query, variables, init) =>
@@ -154,3 +153,6 @@ export function createGraphQLClient(options) {
         sdl
     };
 }
+
+
+export const gqlClient = createGraphQLClient({ endpoint: "/api/gql" });
