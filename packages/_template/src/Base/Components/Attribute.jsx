@@ -1,3 +1,6 @@
+import { Col } from "./Col";
+import { Row } from "./Row";
+
 export const Attribute = ({ item, label, attribute_name, attribute_value }) => {
     const raw = attribute_value != null ? attribute_value : item?.[attribute_name];
 

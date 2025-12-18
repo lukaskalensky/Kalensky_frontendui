@@ -5,7 +5,7 @@ import { Link } from "./Components/Link";
 import { MediumCard } from "./Components/MediumCard";
 import { MediumContent } from "./Components/MediumContent";
 // import { Page } from "./Pages/Page";
-import { Page2 } from "./Pages/Page2";
+import { Page } from "./Pages/Page";
 import { MediumCardScalars } from "./Scalars/ScalarAttribute";
 import { MediumCardVectors } from "./Vectors/VectorAttribute";
 
@@ -19,5 +19,5 @@ export const BaseUI = {
     MediumCardScalars,
     MediumCardVectors,
     LargeCard,
-    Page: Page2
+    Page
 }

@@ -8,7 +8,7 @@ import { MediumCardVectors } from "../../Template/Vectors/VectorAttribute"
 import { useGQLType } from "../../../../dynamic/src/Hooks/useGQLType"
 
 
-import { PageContent as BasePageContent } from "../../Base/Pages/Page"
+import { PageContent as BasePageContent } from "../../Base/Pages/Page_"
 import { BaseUI } from "../../Base"
 /**
  * A page component for displaying lazy-loaded content of a template entity.

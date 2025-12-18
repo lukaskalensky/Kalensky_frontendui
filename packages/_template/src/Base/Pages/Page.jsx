@@ -1,58 +1,58 @@
 import { useParams } from "react-router"
-import { createAsyncGraphQLAction2 } from '../../../../dynamic/src/Core/createAsyncGraphQLAction2';
-import { introspectionQuery } from '../../../../dynamic/src/Core/gqlClient2';
-import { useAsync } from '../../../../dynamic/src/Hooks';
-import { MediumCard } from '../Components/MediumCard'
-import { Col } from '../Helpers/Col';
-import { GQLEntityProvider, useGQLEntityContext } from '../Helpers/GQLEntityProvider';
-import { Row } from '../Helpers/Row';
-import { MediumCardScalars } from '../Scalars/ScalarAttribute';
-import { MediumCardVectors } from '../Vectors/VectorAttribute';
-import { LargeCard } from "../Components/LargeCard";
 
-const HomeLink = () => {
-    const { goToHome } = useGQLEntityContext();
-    const onClick = async (e) => {
-        e.preventDefault();
-        // setLoading(true);
-        goToHome()
-        // setLoading(false);                
-    }
+import { useGQLType } from "../../../../dynamic/src/Hooks/useGQLType"
+
+import { LargeCard } from "../Components/LargeCard"
+import { CardCapsule } from "../Components/CardCapsule"
+import { MediumCardScalars } from "../Scalars/ScalarAttribute"
+import { MediumCardVectors } from "../Vectors/VectorAttribute"
+import { useGQLEntityContext, AsyncActionProvider } from "../Helpers/GQLEntityProvider"
+import { Row } from "../Components/Row"
+import { Col } from "../Components/Col"
+
+export const PageContent = ({children}) => {
+     const gqlContext= useGQLEntityContext()
+     const { item } = gqlContext || {}
+    if (!item) return (<div>Položka nenalezena<pre>{JSON.stringify(gqlContext)}</pre></div>)
     return (
-        <a href="#" onClick={onClick}>🏠</a>
+        <LargeCard item={item} >
+            {children?children:<>
+                <MediumCardScalars item={item} />
+                <MediumCardVectors item={item} />
+            </>}
+        </LargeCard>
     )
 }
 
-export const PageContent = ({ children }) => {
-    const { data } = useGQLEntityContext()
+export const Page = ({ children }) => {
+    const {id, typename} = useParams()
+    // const id = "51d101a0-81f1-44ca-8366-6cf51432e8d6";
+    const item = {id}
+    const { ByIdAsyncAction, queryById } = useGQLType(typename || "RoleGQLModel")    
     return (
-
-        <div className="container-fluid mt-5">
-            <div><HomeLink /></div>
-            <LargeCard item={data}>
-                {children}
-            </LargeCard>
-        </div>
-    );
-}
-
-const introspectionAction = createAsyncGraphQLAction2(introspectionQuery)
-
-export const Page = ({ item, children }) => {
-    const { typename, id } = useParams()
-    const { loading, error, data } = useAsync(introspectionAction)
-    // console.log("BaseUI.Page", data)
-    if (loading) return (<div>Loading</div>)
-    if (error) return (<div>{JSON.stringify(error)}</div>)
-    if (data) {
-        const introspection = data.data;
-        
-        return (
-            <GQLEntityProvider introspection={introspection} entity= {{__typename: typename, id}}>
-                {/* <Binded /> */}
-                <PageContent />
-            </GQLEntityProvider>
-        )
-    }
-    return (<div>Neco je spatne</div>)
+        // <div>Hello</div>
+        <>{ByIdAsyncAction&&
+            <AsyncActionProvider item={item} queryAsyncAction={ByIdAsyncAction}>
+                <PageContent>
+                    {children}
+                </PageContent>
+            </AsyncActionProvider>
+        }
+        {!ByIdAsyncAction&&
+            <div>No ByIdAsyncAction for type {typename}</div>
+        }
+        <Row>
+            <Col>
+                <CardCapsule header="QueryById">
+                    <pre>{queryById}</pre>
+                </CardCapsule>
+            </Col>
+            <Col>
+                <CardCapsule header="Parametry">
+                    <pre>{JSON.stringify(item, null, 2)}</pre>
+                </CardCapsule>
+            </Col>
+        </Row>
+        </>
+    )
 }

@@ -1,7 +1,7 @@
 import { CardCapsule } from "../Components/CardCapsule"
 import { MediumCard } from "../Components/MediumCard"
-import { Col } from "../Helpers/Col"
-import { Row } from "../Helpers/Row"
+import { Col } from "../Components/Col"
+import { Row } from "../Components/Row"
 
 export const ScalarAttributeFactory = (deafult_attribute_name) => ({ item, attribute_name: attribute_name=deafult_attribute_name }) => {
     const attribute_value = item?.[attribute_name] || {}

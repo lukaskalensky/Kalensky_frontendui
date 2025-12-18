@@ -1,7 +1,7 @@
 import { CardCapsule } from "../Components/CardCapsule"
 import { Table } from "../Components/Table"
-import { Col } from "../../Base/Helpers/Col"
-import { Row } from "../../Base/Helpers/Row"
+import { Col } from "../../Base/Components/Col"
+import { Row } from "../../Base/Components/Row"
 
 export const VectorAttributeFactory = (attribute_name) => ({ item }) => {
     const attribute_value = item?.[attribute_name] || []

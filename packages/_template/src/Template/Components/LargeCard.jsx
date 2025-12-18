@@ -1,7 +1,7 @@
 // import Row from "react-bootstrap/Row"
 import { MediumCard } from "./MediumCard"
 import { CardCapsule as CardCapsule_} from "./CardCapsule"
-import { Row } from "../../Base/Helpers/Row"
+import { Row } from "../../Base/Components/Row"
 import { LeftColumn, MiddleColumn } from "@hrbolek/uoisfrontend-shared"
 import { MediumContent as MediumContent_ } from "./MediumContent"
 
