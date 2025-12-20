@@ -1,17 +1,8 @@
-import { Col } from "../../Base/Helpers/Col"
-import { Row } from "../../Base/Helpers/Row"
+import { Attribute } from "../../Base/Components/Attribute"
+import { Col } from "../../Base/Components/Col"
+import { Row } from "../../Base/Components/Row"
 import { Roles } from "../Vectors/Roles"
-
-export const Attribute = ({ attribute_name, label, item }) => {
-    const attribute_value = item?.[attribute_name]
-    let attribute_value_result = attribute_value
-    return (
-        <Row key={attribute_name}>
-            <Col className="col-4"><b>{label}</b></Col>
-            <Col className="col-8">{attribute_value_result}</Col>
-        </Row>
-    )
-}
+import { UserRoles } from "../Vectors/UserRoles"
 
 /**
  * A component that displays medium-level content for an template entity.
@@ -43,8 +34,6 @@ export const MediumContent = ({ item, children}) => {
             <Attribute attribute_name="name" label="Jméno" item={item} />
             <Attribute attribute_name="surname" label="Příjmení" item={item} />
             <Attribute attribute_name="email" label="Email" item={item} />
-            <hr />
-            <Roles item={item} />
             {children}
         </div>
         

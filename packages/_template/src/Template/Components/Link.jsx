@@ -38,4 +38,4 @@ export const Link = ({ item, LinkURI: LinkURI_ = LinkURI, action="view", childre
     // return <a>{children || item?.fullname || item?.name || item?.id || "Nevim"}</a>
 }
 
-registerLink('UserGQLModel', Link)
+// registerLink('UserGQLModel', Link)

@@ -20,7 +20,7 @@ import {
 } from './Components'
 
 import { 
-    EditPage,
+    PageEdit,
     Page,
     PageNavbar,
     TemplateRouterSegments,
@@ -43,7 +43,7 @@ export const TemplateUI = {
 
     Page,
     VectorPage,
-    EditPage,
+    PageEdit,
     PageNavbar,
     TemplateRouterSegments
 }

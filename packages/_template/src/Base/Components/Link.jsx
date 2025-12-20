@@ -15,9 +15,9 @@ export const registerLink = (__typename, Link) => {
 export const GenericURIRoot = "/generic";
 
 export const Link = ({ item, action, children }) => {
-    const registeredLink = item?.__typename ? RegisterofLinks[item.__typename] : null;
-    if (registeredLink && registeredLink !== Link) {
-        const SpecificLink = registeredLink;
+    const SpecificLink = item?.__typename ? RegisterofLinks[item.__typename] : null;
+    if (SpecificLink && SpecificLink !== Link) {
+        console.log('Using specific link for typename:', item.__typename);
         return <SpecificLink item={item} action={action}>{children}</SpecificLink>;
     }
     

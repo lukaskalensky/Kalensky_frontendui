@@ -7,6 +7,8 @@ import { MediumContent as MediumContent_ } from "./MediumContent"
 import { GroupRoles } from "../Vectors/GroupRoles"
 import { Departments } from "../Vectors/Departments"
 import { Faculties } from "../Vectors/Faculties"
+import { RBACObject } from "../../RoleGQLModel2/Components/RBACObject"
+import { InteractiveMutations } from "../InteractiveMutations/InteractiveMutations"
 
 /**
  * A large card component for displaying detailed content and layout for an template entity.
@@ -44,6 +46,8 @@ export const LargeCard = ({ item, children, CardCapsule=CardCapsule_, MediumCont
                     <GroupRoles item={item} />
                     <Departments item={item} />
                     <Faculties item={item} />
+                    <RBACObject item={item} />
+                    <InteractiveMutations item={item}/>
                 </LeftColumn>
                 <MiddleColumn>
                     {children}

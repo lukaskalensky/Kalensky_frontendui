@@ -1,7 +1,14 @@
-import { TemplateUI } from "../../Template"
-import { CardCapsule } from "./CardCapsule"
-import { MediumContent } from "./MediumContent"
-
+// import Row from "react-bootstrap/Row"
+import { MediumCard } from "./MediumCard"
+import { CardCapsule as CardCapsule_} from "./CardCapsule"
+import { Row } from "../../Base/Components/Row"
+import { LeftColumn, MiddleColumn } from "@hrbolek/uoisfrontend-shared"
+import { MediumContent as MediumContent_ } from "./MediumContent"
+import { UserRoles } from "../Vectors/UserRoles"
+import { RBACObject } from "../../RoleGQLModel2/Components/RBACObject"
+import { UserUpdate } from "../InteractiveMutations/UserUpdate"
+import { UserGDPR } from "../InteractiveMutations/UserGDPR"
+import { UserMemberships } from "../Vectors/UserMemberships"
 
 /**
  * A large card component for displaying detailed content and layout for an template entity.
@@ -27,4 +34,27 @@ import { MediumContent } from "./MediumContent"
  *   <p>Additional content for the middle column.</p>
  * </TemplateLargeCard>
  */
-export const LargeCard = ({ item, children }) => <TemplateUI.LargeCard item={item} children={children} CardCapsule={CardCapsule} MediumContent={MediumContent}/>
+export const LargeCard = ({ item, children, CardCapsule=CardCapsule_, MediumContent=MediumContent_ }) => {
+    // console.log("LargeCard.item", item)
+    return (
+        <CardCapsule item={item} >
+            <Row>
+                <LeftColumn>
+                    <CardCapsule item={item} title="Detail">
+                        <MediumContent item={item} />
+                    </CardCapsule>
+                    <UserMemberships item={item} />
+                    <UserRoles item={item} />
+                    <RBACObject item={item} />
+                    <CardCapsule item={item} title="Nástroje">
+                        <UserUpdate className="btn btn-outline-success" item={item} buttonLabel={"Update"}/>
+                        <UserGDPR className="btn btn-outline-success" item={item} buttonLabel={"GDPR"}/>
+                    </CardCapsule>
+                </LeftColumn>
+                <MiddleColumn>
+                    {children}
+                </MiddleColumn>
+            </Row>
+        </CardCapsule>
+    )
+}

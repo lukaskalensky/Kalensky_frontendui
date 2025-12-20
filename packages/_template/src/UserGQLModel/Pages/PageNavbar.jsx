@@ -1,7 +1,7 @@
 import Nav from 'react-bootstrap/Nav'
 import { ProxyLink, MyNavbar, useHash } from '@hrbolek/uoisfrontend-shared';
 
-import { LinkURI } from '../Components/Link';
+import { LinkURI } from '../Components'
 
 /**
  * Allow to use HashContainer for determination which component at page will be rendered.

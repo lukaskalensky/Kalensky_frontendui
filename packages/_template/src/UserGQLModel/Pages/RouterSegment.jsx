@@ -1,5 +1,6 @@
 import { LinkURI } from "../Components/Link"
-import { Page, PageEdit } from "./Page"
+import { Page } from "./Page"
+import { PageUpdateItem } from "./PageUpdateItem"
 
 /**
  * Definice segmentů rout pro Template stránky.
@@ -41,6 +42,6 @@ export const UserRouterSegments = [
     // },
     {
         path: `/${LinkURI.replace('view', 'edit')}:id`,
-        element: (<PageEdit />),
+        element: (<PageUpdateItem />),
     }
 ]
