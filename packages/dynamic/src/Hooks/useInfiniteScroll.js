@@ -136,13 +136,31 @@ export const useInfiniteScroll = ({
                 const nextItems = mergeArraysById(prev.items, fetched);
 
                 const fetchedCount = fetched.length;
-                const limit = params?.limit;
 
-                const hasMore = limit == null ? fetchedCount > 0 : fetchedCount === limit;
+                // limit ber z aktuálního requestu (params), nebo z prev.filter jako fallback
+                const limit =
+                    (params && params.limit != null ? params.limit : undefined) ??
+                    (prev.filter && prev.filter.limit != null ? prev.filter.limit : undefined);
+
+                // "má to ještě další stránku?"
+                const hasMore =
+                    limit == null ? fetchedCount > 0 : fetchedCount === limit;
+
                 if (!hasMore) onAll();
 
+                // ✅ tady konečně používáme calculateNewFilter
                 const nextFilter = hasMore
-                    ? { ...prev.filter, skip: (prev.filter.skip || 0) + fetchedCount, limit: prev.filter.limit }
+                    ? (() => {
+                        // kompatibilita: calculateNewFilter(oldFilter) i calculateNewFilter(oldFilter, ctx)
+                        const ctx = { fetched, fetchedCount, limit, params, result };
+                        const nf =
+                            calculateNewFilter.length >= 2
+                                ? calculateNewFilter(prev.filter, ctx)
+                                : calculateNewFilter(prev.filter);
+
+                        // bezpečný fallback, kdyby vrátil null/undefined
+                        return nf ?? prev.filter;
+                    })()
                     : prev.filter;
 
                 filterRef.current = nextFilter;
@@ -167,7 +185,7 @@ export const useInfiniteScroll = ({
         } finally {
             inFlightRef.current = false;
         }
-    }, [dispatch, asyncAction, gqlClient, onAll]);
+    }, [dispatch, asyncAction, gqlClient, onAll, calculateNewFilter]);
 
     const restart = useCallback(async (newActionParams = {}) => {
         // nový "běh" => zneplatní rozpracované výsledky

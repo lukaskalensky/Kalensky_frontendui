@@ -6,7 +6,7 @@ import { LinkURI } from "../Components"
 import { PageBase } from "./PageBase"
 import { Table } from "../Components/Table"
 import { Filter } from "../Components/Filter"
-import { FilterButton } from "../../Base/FormControls/Filter"
+import { FilterButton, ResetFilterButton } from "../../Base/FormControls/Filter"
 import { useLocation, useSearchParams } from "react-router"
 import { useState } from "react"
 import { useEffect } from "react"
@@ -38,7 +38,7 @@ export const PageVector = ({ children, queryAsyncAction = ReadPageAsyncAction })
         {
             asyncAction: queryAsyncAction,
             actionParams: { skip: 0, limit: 30, where: whereFromUrl },
-            reset: whereFromUrl
+            // reset: whereFromUrl
         }
     )
 
@@ -57,11 +57,17 @@ export const PageVector = ({ children, queryAsyncAction = ReadPageAsyncAction })
             >
                 <Filter>
                     <FilterButton 
-                        className="form-control btn btn-primary"
+                        className="form-control btn btn-outline-success"
                         paramName="gtWhere"
                     >
                         Filtrovat
                     </FilterButton>
+                    <ResetFilterButton 
+                        className="form-control btn btn-warning"
+                        paramName="gtWhere"
+                    >
+                        Vymazat filtr
+                    </ResetFilterButton>
                 </Filter>
             </Collapsible>
 

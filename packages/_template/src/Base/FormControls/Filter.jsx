@@ -38,6 +38,7 @@ function combine(join, items = []) {
 export const Filter = ({
     id,                  // relation key nebo undefined pro root
     label,
+    resetKey,
     join: joinProp = "_and",
     onChange = () => null,
     children,
@@ -107,10 +108,11 @@ export const Filter = ({
     }, []);
 
     const readFilter = useCallback(() => wrappedExpr, [wrappedExpr])
-    
+    const [resetToken, setResetToken] = useState(0);
     const resetFilter = useCallback(() => {
         setCurrentFilter({});
         setJoin(joinProp);
+        setResetToken(t => t + 1); // <-- vynutí remount children
     }, [joinProp]);
 
     return (
@@ -145,7 +147,9 @@ export const Filter = ({
                         </Col>
                     </Row>
                 )}
-                {children}
+                <div key={resetKey ?? resetToken}>
+                    {children}
+                </div>
             </SimpleCardCapsule>
         </FilterDesignerContext.Provider>
     );
@@ -348,13 +352,13 @@ export const StringFilter = ({
             <Row>
                 <Col>
                     <select className="form-control" value={op} onChange={handleChangeOp}>
-                        <option value="_ilike">_ilike</option>
-                        <option value="_startswith">_startswith</option>
-                        <option value="_endswith">_endswith</option>
-                        <option value="_eq">_eq</option>
-                        <option value="_gt">_gt</option>
-                        <option value="_lt">_lt</option>
-                        <option value="_between">_between</option>
+                        <option value="Obsahuje">_ilike</option>
+                        <option value="Začíná na">_startswith</option>
+                        <option value="Končí na">_endswith</option>
+                        <option value="Je rovno">_eq</option>
+                        <option value="Je větší než">_gt</option>
+                        <option value="Je menší než">_lt</option>
+                        <option value="Mezi">_between</option>
                     </select>
                 </Col>
 

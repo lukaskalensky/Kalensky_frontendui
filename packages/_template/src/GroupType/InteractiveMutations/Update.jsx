@@ -10,18 +10,23 @@ import { useState } from "react"
 import { LinkURI, LiveEdit, MediumEditableContent } from "../Components"
 import { useCallback } from "react"
 import { useGQLEntityContext } from "../../Base/Helpers/GQLEntityProvider"
+import { useMemo } from "react"
 
 export const UpdateURI = `${LinkURI.replace('view', 'edit')}:id`
 
 export const UpdateLink = ({item, ...props}) => {
+    const Link = useMemo(() => {
+        return UpdateURI.replace(":id", id)
+    }, [item])
+
     const navigate = useNavigate()
-    const handleClick = () => {
-        const {id} = item
-        navigate(UpdateURI.replace(":id", id))
+    const handleClick = (e) => {
+        e.preventDefault()
+        navigate(Link)
     }
     return (
         <AbsolutePermissionGate roles={["superadmin"]} >
-            <button {...props} onClick={handleClick} />
+            <a href={Link} {...props} onClick={handleClick} />
         </AbsolutePermissionGate>
     )
 }

@@ -2,10 +2,8 @@ import { useNavigate } from "react-router"
 import { AbsolutePermissionGate, useRoles as useRolePermission } from "../../../../dynamic/src/Hooks/useRoles"
 import { LinkURI, MediumEditableContent } from "../Components"
 import { useState } from "react"
-import { useEditAction } from "../../../../dynamic/src/Hooks/useEditAction"
 import { Dialog, ErrorHandler, LoadingSpinner } from "@hrbolek/uoisfrontend-shared"
 import { ReadItemURI } from "../Pages/PageReadItem"
-import { useCallback } from "react"
 import { useCreateSession } from "./useCreateSession"
 import { InsertAsyncAction } from "../Queries"
 
@@ -19,7 +17,7 @@ export const CreateLink = ({ ...props }) => {
     }
     return (
         <AbsolutePermissionGate roles={["superadmin"]} >
-            <button {...props} onClick={handleClick} />
+            {/* <button {...props} onClick={handleClick} /> */}
             <a href="/#create" {...props} onClick={handleClick} >Create</a>
         </AbsolutePermissionGate>
     )

@@ -1,4 +1,6 @@
 import { Input } from "@hrbolek/uoisfrontend-shared"
+import { SearchAsyncAction } from "../Queries/SearchAsyncAction"
+import { EntityLookup } from "../../Base/FormControls/EntityLookup"
 
 /**
  * A component that displays medium-level content for an template entity.
@@ -29,6 +31,13 @@ export const MediumEditableContent = ({ item, onChange=(e)=>null, onBlur=(e)=>nu
         {/* defaultValue={item?.name|| "Název"}  */}
             <Input id={"name"} label={"Jméno"} className="form-control" value={item?.name|| "Název"} onChange={onChange} onBlur={onBlur} />
             <Input id={"name_en"} label={"Anglický název"} className="form-control" value={item?.name_en|| "Anglický název"} onChange={onChange} onBlur={onBlur} />
+            <EntityLookup 
+                id={"mastertypeId"}
+                label="Nadřízený typ"
+                className="form-control"
+                value={null}
+                asyncAction={SearchAsyncAction}
+            />
             {children}
         </>
     )
