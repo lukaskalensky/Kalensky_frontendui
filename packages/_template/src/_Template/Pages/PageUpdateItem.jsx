@@ -1,23 +1,25 @@
+import { LargeCard, LinkURI } from "../Components"
+import { ReadAsyncAction } from "../Queries"
+import { PageItemBase } from "./PageBase"
+import { UpdateBody } from "../InteractiveMutations/Update"
 import { useGQLEntityContext } from "../../Base/Helpers/GQLEntityProvider"
-import { LargeCard, LiveEdit } from "../Components"
-import { ReadAsyncAction, UpdateAsyncAction } from "../Queries"
-import { PageBase } from "./PageBase"
+
+export const UpdateItemURI = `${LinkURI.replace('view', 'edit')}:id`
 
 export const PageUpdateItem = ({ children, queryAsyncAction=ReadAsyncAction, ...props }) => {
     return (
-        <PageBase queryAsyncAction={queryAsyncAction}>
+        <PageItemBase queryAsyncAction={queryAsyncAction}>
             PageUpdateItem
-            <Update {...props} />
-        </PageBase>
+            <LargeCardFromContext {...props}/>
+        </PageItemBase>
     )
 }
 
-const Update = ({mutationAsyncAction=UpdateAsyncAction, ...props}) => {
+const LargeCardFromContext = ({...props}) => {
     const { item } = useGQLEntityContext()
-    if (!item) return null  
     return (
-        <LargeCard item={item} {...props} >
-            <LiveEdit item={item} mutationAsyncAction={mutationAsyncAction}/>
-        </LargeCard>        
-    )    
+        <LargeCard item={item}>
+            <UpdateBody {...props} />
+        </LargeCard>
+    )
 }

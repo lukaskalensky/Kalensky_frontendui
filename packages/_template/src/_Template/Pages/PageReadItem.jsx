@@ -5,6 +5,8 @@ import { LargeCard } from "../Components"
 import { ReadAsyncAction } from "../Queries"
 import { PageBase } from "./PageBase"
 
+export const ReadItemURI = `${LinkURI}:id`
+
 export const PageReadItem = ({ children, queryAsyncAction=ReadAsyncAction, ...props }) => {
     return (
         <PageBase queryAsyncAction={queryAsyncAction}>
