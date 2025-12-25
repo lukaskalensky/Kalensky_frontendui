@@ -6,6 +6,8 @@ import { LeftColumn, MiddleColumn } from "@hrbolek/uoisfrontend-shared"
 import { MediumContent as MediumContent_ } from "./MediumContent"
 import { InteractiveMutations } from '../Mutations/InteractiveMutations'
 import { RBACObject } from "../Scalars/RBACObject"
+import { MasterGroup } from "../Scalars/MasterGroup"
+import { GroupRoles } from "../Scalars/GroupRoles"
 
 /**
  * A large card component for displaying detailed content and layout for an template entity.
@@ -40,6 +42,7 @@ export const LargeCard = ({ item, children, CardCapsule=CardCapsule_, MediumCont
                     <CardCapsule item={item} title="Detail">
                         <MediumContent item={item} />
                     </CardCapsule>
+                    <GroupRoles item={item} />
                     <RBACObject item={item} />
                     <InteractiveMutations item={item} />
                 </LeftColumn>

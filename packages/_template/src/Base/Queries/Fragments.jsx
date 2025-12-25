@@ -57,7 +57,7 @@ fragment Role on RoleGQLModel {
     roletypeId
     userId
     groupId
-    roletype { __typename id }
+    roletype { __typename id name }
     user { __typename id fullname }
     group { __typename id name }
   }

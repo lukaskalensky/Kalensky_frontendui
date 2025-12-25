@@ -34,6 +34,10 @@ export const MediumContent = ({ item }) => {
         </Attribute>
         <Attribute label="Anglický název" item={item} attribute_name={"nameEn"} />
         <Attribute label="Email" item={item} attribute_name={"email"} />
+        <hr />
+        <Attribute label={"Nadřízený"}>
+            <Link item={item?.mastergroup} />
+        </Attribute>
         <hr/>
         <Attribute label="Poslední změna" item={item} attribute_name={"lastchange"} />
         <Attribute label="Provedl" item={item} attribute_name={"lastchange"}>
