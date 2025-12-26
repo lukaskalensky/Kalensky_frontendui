@@ -27,7 +27,7 @@ function safeParseWhere(sp, paramName = "where") {
 }
 
 // 
-const filterParameterName = "where"
+const filterParameterName = "gr_where"
 export const PageVector = ({ children, queryAsyncAction = ReadPageAsyncAction }) => {
     
     const [sp] = useSearchParams();
@@ -37,13 +37,13 @@ export const PageVector = ({ children, queryAsyncAction = ReadPageAsyncAction })
     const { items, loading, error, hasMore, sentinelRef, loadMore, restart } = useInfiniteScroll(
         {
             asyncAction: queryAsyncAction,
-            actionParams: { skip: 0, limit: 30, where: whereFromUrl },
+            actionParams: { skip: 0, limit: 25, where: whereFromUrl },
             // reset: whereFromUrl
         }
     )
 
     useEffect(() => {
-        const params = {skip: 0, limit: 30, where: whereFromUrl} 
+        const params = {skip: 0, limit: 25, where: whereFromUrl} 
         restart(params)
     }, [whereFromUrl]);
 

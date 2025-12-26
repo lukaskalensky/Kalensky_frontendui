@@ -1,21 +1,28 @@
 import { ReadAsyncAction } from "../Queries"
 import { Row } from "../../Base/Components/Row";
-import { Col } from "../../Base/Components/Col";
-import { LinkURI } from "../Components";
-import { PageBase } from "./PageBase";
 import { CreateBody } from "../Mutations/Create";
+import { LeftColumn, MiddleColumn } from "@hrbolek/uoisfrontend-shared";
+import { PageItemBase } from "./PageBase";
 
-export const PageCreateItem = ({ children, queryAsyncAction=ReadAsyncAction, ...props }) => {
+
+
+const PageBody = ({...props}) => (
+    <Row>
+        <LeftColumn />
+        <MiddleColumn>
+            <CreateBody {...props} />
+        </MiddleColumn>
+    </Row>
+)
+
+export const PageCreateItem = ({ 
+    SubPage=PageBody,
+    ...props
+}) => {
     return (
-        <PageBase>
-            <Row>
-                <Col></Col>
-                <Col></Col>
-                <Col>
-                    <CreateBody {...props} />
-                </Col>
-                <Col></Col>
-            </Row>
-        </PageBase>
+        <PageItemBase 
+            SubPage={SubPage}
+            {...props}
+        />
     )
 }

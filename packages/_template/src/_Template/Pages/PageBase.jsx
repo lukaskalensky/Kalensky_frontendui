@@ -1,8 +1,8 @@
-import { useParams } from "react-router"
-import { AsyncActionProvider } from "../../Base/Helpers/GQLEntityProvider"
-import { PlaceChild } from "../../Base/Helpers/PlaceChild"
-import { PageNavbar } from "./PageNavbar"
+import { PageNavbar} from "./PageNavbar"
 import { ReadAsyncAction } from "../Queries"
+import { PageItemBase as PageItemBase_} from "../../Base/Pages/Page"
+import { LargeCard } from "../Components"
+
 
 /**
  * Base wrapper pro stránky pracující s jedním entity itemem podle `:id` z routy.
@@ -28,14 +28,21 @@ import { ReadAsyncAction } from "../Queries"
  * @returns {import("react").JSX.Element}
  *   Provider s navigací (`PageNavbar`) a obsahem stránky (`children`).
  */
-export const PageItemBase = ({ children, queryAsyncAction=ReadAsyncAction }) => {
-    const {id} = useParams()
-    const item = {id}
+export const PageItemBase = ({ 
+    queryAsyncAction=ReadAsyncAction,
+    // PageNavbar=PageNavbar,
+    ItemLayout=LargeCard,
+    SubPage=null,
+    ...props
+}) => {
     return (
-        <AsyncActionProvider item={item} queryAsyncAction={queryAsyncAction}>
-            <PlaceChild Component={PageNavbar} />
-            {children}
-        </AsyncActionProvider>
+        <PageItemBase_ 
+            queryAsyncAction={queryAsyncAction} 
+            // PageNavbar={PageNavbar}
+            ItemLayout={ItemLayout}
+            SubPage={SubPage}
+            {...props} 
+        />  
     )
 }
 

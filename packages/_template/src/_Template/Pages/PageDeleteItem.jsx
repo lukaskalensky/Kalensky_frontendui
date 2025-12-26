@@ -1,13 +1,16 @@
-import { DeleteAsyncAction } from "../Queries"
-import { LinkURI } from "../Components";
-import { PageBase } from "./PageBase";
+import { PageItemBase } from "./PageBase";
 import { DeleteBody } from "../Mutations/Delete";
 
-export const PageDeleteItem = ({ children, queryAsyncAction=DeleteAsyncAction, ...props }) => {
+export const PageDeleteItem = ({ 
+    SubPage=DeleteBody,
+    ...props
+}) => {
     return (
-        <PageBase>
-            <DeleteBody {...props} mutationAsyncAction={queryAsyncAction} />
-        </PageBase>
+        <PageItemBase
+            SubPage={SubPage}
+            {...props}
+        />
+         
     )
 }
 
