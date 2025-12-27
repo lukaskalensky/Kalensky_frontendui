@@ -5,12 +5,9 @@ import {
     UpdateLink as BaseUpdateLink 
 } from "../../Base/Mutations/Update";
 
-import { LinkURI, MediumEditableContent } from "../Components";
+import { MediumEditableContent, UpdateItemURI } from "../Components";
 import { UpdateAsyncAction } from "../Queries";
-import { makeMutationURI } from "./helpers";
-//import { UpdateBody, UpdateButton, UpdateDialog, UpdateLink } from "./Update";
 
-export const UpdateURI = makeMutationURI(LinkURI, "edit", { withId: true });
 
 const DefaultContent = MediumEditableContent
 const mutationAsyncAction = UpdateAsyncAction
@@ -27,7 +24,7 @@ const permissions = {
 }
 
 
-export const UpdateLink = ({uriPattern=UpdateURI, ...props}) => {
+export const UpdateLink = ({uriPattern=UpdateItemURI, ...props}) => {
     return <BaseUpdateLink 
         {...props} 
         uriPattern={uriPattern} 

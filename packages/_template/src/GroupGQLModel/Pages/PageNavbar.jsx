@@ -3,9 +3,14 @@ import { ProxyLink, MyNavbar, useHash } from '@hrbolek/uoisfrontend-shared';
 
 import { LinkURI } from '../Components'
 import { RolesURI } from './PageReadItemEx';
-import { Link } from '../../Base/Components';
+import { Link as GroupLink } from '../Components';
+import { Link as UserLink } from '../../UserGQLModel/Components';
 import { NavDropdown } from 'react-bootstrap';
-import { VectorItemsURI } from './PageVector';
+import { VectorItemsURI as GroupVectorItemsURI } from '../Components/Link';
+import { CreateURI as CreateRoleTypeURI } from '../../RoleTypeGQLModel/Components/Link';
+import { CreateURI as CreateGroupTypeURI } from '../../GroupTypeGQLModel/Components/Link';
+import { VectorItemsURI as UserVectorItemsURI } from '../../UserGQLModel/Components/Link';
+import { VectorItemsURI as GroupTypeVectorItemsURI } from '../../GroupTypeGQLModel/Components/Link';
 
 /**
  * Allow to use HashContainer for determination which component at page will be rendered.
@@ -108,27 +113,75 @@ export const PageNavbar = ({ item, children, onSearchChange }) => {
                     </Nav.Item>
                 ))} */}
                 {item && (<>
+                    <NavDropdown title="Skupiny">
+                        <NavDropdown.Item as={ProxyLink} to={GroupVectorItemsURI}>
+                            Seznam všech skupin
+                        </NavDropdown.Item>
+                        {/* <span className="border-start mx-2" aria-hidden="true" /> */}
+                        <NavDropdown.Item as={GroupLink} item={item} action="roles">
+                            Role
+                        </NavDropdown.Item>
+                        {/* <span className="border-start mx-2" aria-hidden="true" /> */}
+                        <NavDropdown.Item as={GroupLink} item={item} action="subgroups">
+                            Podskupiny
+                        </NavDropdown.Item>
+                    </NavDropdown>
+
+                    <NavDropdown title="Uživatelé">
+                        <NavDropdown.Item as={UserLink} to={UserVectorItemsURI}>
+                            Seznam všech uživatelů
+                        </NavDropdown.Item>
+                        {/* <span className="border-start mx-2" aria-hidden="true" /> */}
+                        <NavDropdown.Item as={UserLink} item={item} action="roles">
+                            Role
+                        </NavDropdown.Item>
+                        {/* <span className="border-start mx-2" aria-hidden="true" /> */}
+                        <NavDropdown.Item as={UserLink} item={item} action="subgroups">
+                            Podskupiny
+                        </NavDropdown.Item>
+                    </NavDropdown>
+
+
+                    <NavDropdown title="Typy">
+                        <NavDropdown.Item as={UserLink} to={GroupTypeVectorItemsURI}>
+                            Seznam všech typů skupin
+                        </NavDropdown.Item>
+                        <NavDropdown.Item as={ProxyLink} to={CreateGroupTypeURI}>
+                            Nový typ skupiny
+                        </NavDropdown.Item>
+                        <NavDropdown.Item as={"span"} disabled>
+                            {/* <hr/> */}
+                        </NavDropdown.Item>
+                        {/* <span className="border-start mx-2" aria-hidden="true" /> */}
+                        <NavDropdown.Item as={UserLink} item={item} action="roles">
+                            Seznam všech typů rolí
+                        </NavDropdown.Item>
+                        {/* <span className="border-start mx-2" aria-hidden="true" /> */}
+                        <NavDropdown.Item as={ProxyLink} to={CreateRoleTypeURI}>
+                            Nový typ role
+                        </NavDropdown.Item>
+                    </NavDropdown>
+
                     <Nav.Item>
-                        <Nav.Link as={"span"} to={VectorItemsURI}>
-                            <ProxyLink to={VectorItemsURI}>
-                                Seznam všech skupin
-                            </ProxyLink>
+                        <Nav.Link as={ProxyLink} to={GroupVectorItemsURI}>
+                            Seznam všech skupin
+                            
                         </Nav.Link>
                     </Nav.Item>
-                    <span className="border-start mx-2" aria-hidden="true" />
+                    {/* <span className="border-start mx-2" aria-hidden="true" /> */}
                     <Nav.Item>
-                        <Nav.Link as={Link} item={item} action="roles">
+                        <Nav.Link as={GroupLink} item={item} action="roles">
                             Role
                         </Nav.Link>
                     </Nav.Item>
-                    <span className="border-start mx-2" aria-hidden="true" />
+                    {/* <span className="border-start mx-2" aria-hidden="true" /> */}
                     <Nav.Item>
-                        <Nav.Link as={Link} item={item} action="subgroups">
+                        <Nav.Link as={GroupLink} item={item} action="subgroups">
                             Podskupiny
                         </Nav.Link>
                     </Nav.Item>
                 </>)}
-                  
+
                 {children}
             </MyNavbar>
         </div>

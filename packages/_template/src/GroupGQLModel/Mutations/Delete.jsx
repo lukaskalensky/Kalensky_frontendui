@@ -1,16 +1,12 @@
-import { LinkURI, MediumContent } from "../Components";
+import { DeleteURI, ListURI, MediumContent } from "../Components";
 import { DeleteAsyncAction } from "../Queries";
-import { makeMutationURI } from "./helpers";
 import { 
     DeleteBody as BaseDeleteBody, 
     DeleteButton as BaseDeleteButton, 
     DeleteDialog as BaseDeleteDialog, 
     DeleteLink as BaseDeleteLink
 } from "../../Base/Mutations/Delete";
-import { VectorItemsURI } from "../Pages/PageVector";
 
-
-export const DeleteURI = makeMutationURI(LinkURI, "delete", { withId: true });
 const DefaultContent = MediumContent
 const mutationAsyncAction = DeleteAsyncAction
 
@@ -23,7 +19,7 @@ export const DeleteLink = ({ ...props }) => {
     return (
         <BaseDeleteLink 
             {...props} 
-            uriPattern={DeleteURI} 
+            uriPattern={DeleteItemURI} 
             {...permissions}
         />
     )
@@ -35,7 +31,7 @@ export const DeleteButton = ({ ...props }) => {
             {...props} 
             DefaultContent={DefaultContent} 
             mutationAsyncAction={mutationAsyncAction}
-            vectorItemsURI={VectorItemsURI}
+            vectorItemsURI={ListURI}
             {...permissions}
         />
     )
@@ -47,7 +43,7 @@ export const DeleteDialog = ({ ...props }) => {
             {...props} 
             DefaultContent={DefaultContent} 
             mutationAsyncAction={mutationAsyncAction}
-            vectorItemsURI={VectorItemsURI}
+            vectorItemsURI={ListURI}
             {...permissions}
         />
     )
@@ -59,7 +55,7 @@ export const DeleteBody = ({ ...props }) => {
             {...props} 
             DefaultContent={DefaultContent} 
             mutationAsyncAction={mutationAsyncAction}
-            vectorItemsURI={VectorItemsURI}
+            vectorItemsURI={ListURI}
             {...permissions}
         />
     )

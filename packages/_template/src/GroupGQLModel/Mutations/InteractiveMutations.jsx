@@ -1,9 +1,8 @@
-import { CardCapsule } from "../Components"
+import { CardCapsule, VectorItemsURI } from "../Components"
 import { CreateButton, CreateLink } from "./Create"
 import { UpdateButton, UpdateLink } from "./Update"
 import { ProxyLink } from "../../Base/Components/ProxyLink"
 import { DeleteButton } from "./Delete"
-import { VectorItemsURI } from "../Pages/PageVector"
 
 export const PageLink = ({ children, preserveHash = true, preserveSearch = true, ...props }) => {
     return (

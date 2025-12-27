@@ -1,16 +1,13 @@
-import { LinkURI } from "../Components"
-import { makeMutationURI } from "../Mutations/helpers"
+import { ReadItemURI } from "../Components"
 import { ReadAsyncAction } from "../Queries"
 import { GroupRoles } from "../Vectors/GroupRoles"
 import { GroupRolesOn } from "../Vectors/GroupRolesOn"
 import { GroupSubgroups } from "../Vectors/GroupSubgroups"
 import { PageReadItem } from "./PageReadItem"
 
-export const ReadItemURI = `${LinkURI}:id`
-
-export const RolesOnURI = makeMutationURI(LinkURI, "roleson", { withId: true })
-export const RolesURI = makeMutationURI(LinkURI, "roles", { withId: true })
-export const SubgroupsURI = makeMutationURI(LinkURI, "subgroups", { withId: true })
+export const RolesOnURI = ReadItemURI.replace("view", "roleson")
+export const RolesURI = ReadItemURI.replace("view", "roles")
+export const SubgroupsURI = ReadItemURI.replace("view", "subgroups")
 
 /**
  * Základní obálka pro „read“ stránku entity podle `:id` z routy.
