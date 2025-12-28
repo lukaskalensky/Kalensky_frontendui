@@ -1,8 +1,9 @@
-import { GeneratedContentBase } from "../../Base/Pages/Page"
+import { GroupSubgroups } from "../Vectors/GroupSubgroups"
 import { PageItemBase } from "./PageBase"
 
 export const PageReadItem = ({ 
-    SubPage=GeneratedContentBase,
+    // SubPage=GeneratedContentBase,
+    SubPage=GroupSubgroups,
     ...props
 }) => {
     return (
