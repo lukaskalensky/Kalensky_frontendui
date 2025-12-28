@@ -1,13 +1,12 @@
-import { PageVector, VectorItemsURI } from "./PageVector"
+import { PageVector } from "./PageVector"
 import { PageUpdateItem } from "./PageUpdateItem"
 import { PageCreateItem } from "./PageCreateItem"
 import { PageReadItem, ReadItemURI } from "./PageReadItem"
 import { PageDeleteItem } from "./PageDeleteItem"
-import { DeleteURI } from "../Mutations/Delete"
-import { CreateURI } from "../Mutations/Create"
-import { UpdateURI } from "../Mutations/Update"
 
 import { PageReadItemRolesOn } from './PageReadItemEx'
+import { DeleteItemURI, UpdateItemURI } from "../Components"
+import { CreateURI, ReadItemURI, VectorItemsURI } from "../Components"
 
 /**
  * Definice segmentů rout pro Template stránky.
@@ -52,11 +51,11 @@ export const TemplateRouterSegments = [
         element: (<PageReadItem />),
     },
     {
-        path: UpdateURI,
+        path: UpdateItemURI,
         element: (<PageUpdateItem />),
     },   
     {
-        path: DeleteURI,
+        path: DeleteItemURI,
         element: (<PageDeleteItem />),
     },   
     {
