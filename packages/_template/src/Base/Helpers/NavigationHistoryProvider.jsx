@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux"
 import { selectItemById } from "../../../../dynamic/src/Store";
 import { Navbar } from "react-bootstrap";
+import { ProxyLink } from "../Components/ProxyLink";
 // Trail z URL: vrátí pole crumbů [{key,label,to}]
 function computeTrail(pathname) {
     const seg = pathname.split("/").filter(Boolean);
@@ -119,7 +120,7 @@ export const useAzureLikeHistory = () => {
 
 
 export const NavigationHistoryLinks = () => {
-    const { items, goToEntry, clear } = useAzureLikeHistory();
+    const { items=[], goToEntry, clear } = useAzureLikeHistory();
     const navigate = useNavigate();
     const ordered = useMemo(() => [...items].reverse(), [items]);
     const handleClick = (e) => {
@@ -140,7 +141,7 @@ export const NavigationHistoryLinks = () => {
         <Navbar bg="light">
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ opacity: 0.7 }}></span>
-
+            
             {ordered.map((e) => (<>
                 <a
                     key={e.entityKey}
@@ -157,8 +158,8 @@ export const NavigationHistoryLinks = () => {
                 </a>
                 {e.trail.length > 1 && 
                     <span style={{ opacity: 0.7 }}>
-                        {e.trail.map(t => (
-                            <a key={t.to} href={t.to} className="btn btn-sm btn-link border-0" onClick={handleClick}>
+                        {e.trail.map((t, i) => (
+                            <a key={t.to + ":" + i} href={t.to} className="btn btn-sm btn-link border-0" onClick={handleClick}>
                                 {t.label}
                             </a>
                         ))}
