@@ -4,6 +4,8 @@ import { useAsyncThunkAction } from "../../../../dynamic/src/Hooks";
 import { useState } from "react";
 import { CreateDelayer } from "@hrbolek/uoisfrontend-shared";
 import { AsyncStateIndicator } from "./AsyncStateIndicator";
+import { SimpleCardCapsule } from "../Components";
+import { useCallback } from "react";
 
 const GQLEntityContext = createContext(null);
 export const useGQLEntityContext = () => {
@@ -13,7 +15,7 @@ export const useGQLEntityContext = () => {
     }
     return result
 }
-       
+
 
 /**
  * Provider, který nad daným `item` spouští asynchronní thunk akci (`queryAsyncAction`)
@@ -51,44 +53,50 @@ export const useGQLEntityContext = () => {
  *
  * @returns {import('react').JSX.Element}
  */
-export const AsyncActionProvider = ({ 
-    item, 
-    queryAsyncAction, 
-    options={ deferred: false, network: true }, 
+export const AsyncActionProvider = ({
+    item,
+    queryAsyncAction,
+    options = { deferred: false, network: true },
 
-    onChange=()=>null,
-    onBlur=()=>null,
+    onChange = () => null,
+    onBlur = () => null,
 
-    children, 
+    children,
 }) => {
     if (queryAsyncAction == null) {
         throw new Error("AsyncActionProvider: queryAsyncAction is required");
     }
 
-    const [contextid] = useState(crypto.randomUUID() || null)
-    const { run , error, loading, entity, data } = useAsyncThunkAction(queryAsyncAction, item, options)
+    const [contextid] = useState(crypto?.randomUUID?.() ?? null)
+    const { run, error, loading, entity, data } = useAsyncThunkAction(queryAsyncAction, item, options)
     const [delayer] = useState(() => CreateDelayer())
     const [varsState, setVarsState] = useState(item || {});
-    const onEvent = (masterEvent) => async (e) => {
+    const onEvent = useCallback((masterEvent) => async (e) => {
         // console.log("AsyncAcionProvider onChange e", contextid, e)
         const value = e?.target?.value
         setVarsState(old => value)
         const newState = await delayer(() => run(value))
         // console.log("AsyncAcionProvider newState e", contextid, newState)
-        const newE = {target: { value: newState}}
+        const newE = { target: { value: newState } }
         return await masterEvent(newE)
-    }
+    }, [setVarsState, delayer, run])
     
+    const handleChange = useCallback(
+        onEvent(onChange), [onEvent, onChange]
+    )
+    const handleBlur = useCallback(
+        onEvent(onBlur), [onEvent, onBlur]
+    )
     // console.log("GQLEntityProvider", item, "entity", entity, "data", data)
-    const contextValue = { 
-        loading, 
-        error, 
-        reRead: run, 
-        params: varsState, 
-        item: entity, 
-        data, 
-        onChange: onEvent(onChange), 
-        onBlur: onEvent(onBlur) 
+    const contextValue = {
+        loading,
+        error,
+        reRead: run,
+        params: varsState,
+        item: entity,
+        data,
+        onChange: handleChange,
+        onBlur: handleBlur
     }
     // console.log("GQLEntityProvider item", contextid, entity, data)
     // console.log("GQLEntityProvider contextValue", contextid, contextValue)
@@ -97,11 +105,59 @@ export const AsyncActionProvider = ({
         <GQLEntityContext.Provider value={contextValue}>
             {/* <h1>{contextid}</h1> */}
             <AsyncStateIndicator error={error} loading={loading} />
-            
+
             {/* {(!loading && !error) && children} */}
-            {contextValue.item && children}
+            {children}
             {/* {!contextValue.item && <pre>{JSON.stringify(contextValue)}</pre>} */}
             {/* <pre>{JSON.stringify(contextValue, null, 2)}</pre> */}
+        </GQLEntityContext.Provider>
+    );
+};
+
+export const Group = ({ id, children }) => {
+    const entityCtx = useContext(GQLEntityContext);
+    if (!entityCtx) throw Error("Group must be used within GQLEntityContext");
+
+    const wrapEvent = useCallback(
+        (eOrValue) => {
+            // dovol: event nebo přímá hodnota
+            const value =
+                eOrValue && typeof eOrValue === "object" && "target" in eOrValue
+                    ? eOrValue.target?.value
+                    : eOrValue;
+
+            return {
+                target: {
+                    id,
+                    value: { [id]: value }, // patch
+                }
+            };
+        },
+        [id]
+    );
+
+    const handleChange = useCallback(
+        (eOrValue) => entityCtx.onChange?.(wrapEvent(eOrValue)),
+        [entityCtx, wrapEvent]
+    );
+
+    const handleBlur = useCallback(
+        (eOrValue) => entityCtx.onBlur?.(wrapEvent(eOrValue)),
+        [entityCtx, wrapEvent]
+    );
+
+    const contextValue = useMemo(
+        () => ({
+            ...entityCtx,          // zachovej vše z parenta
+            onChange: handleChange,
+            onBlur: handleBlur,
+        }),
+        [entityCtx, handleChange, handleBlur]
+    );
+
+    return (
+        <GQLEntityContext.Provider value={contextValue}>
+            {children}
         </GQLEntityContext.Provider>
     );
 };
