@@ -1,10 +1,9 @@
 import { PageVector } from "./PageVector"
 import { PageUpdateItem } from "./PageUpdateItem"
 import { PageCreateItem } from "./PageCreateItem"
-import { PageReadItem, ReadItemURI } from "./PageReadItem"
+import { PageReadItem } from "./PageReadItem"
 import { PageDeleteItem } from "./PageDeleteItem"
 
-import { PageReadItemRolesOn } from './PageReadItemEx'
 import { DeleteItemURI, UpdateItemURI } from "../Components"
 import { CreateURI, ReadItemURI, VectorItemsURI } from "../Components"
 
