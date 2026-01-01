@@ -1,4 +1,3 @@
-import { PageNavbar as PageNavbar_} from "./PageNavbar"
 import { ReadAsyncAction } from "../Queries"
 import { PageItemBase as PageItemBase_} from "../../../../_template/src/Base/Pages/Page"
 import { LargeCard } from "../Components"
@@ -30,7 +29,7 @@ import { LargeCard } from "../Components"
  */
 export const PageItemBase = ({ 
     queryAsyncAction=ReadAsyncAction,
-    PageNavbar=PageNavbar_,
+    PageNavbar=()=>null,
     ItemLayout=LargeCard,
     SubPage=null,
     ...props
@@ -47,10 +46,10 @@ export const PageItemBase = ({
 }
 
 
-export const PageBase = ({ children }) => {
+export const PageBase = ({ children, PageNavbar=()=>null }) => {
     return (
         <>
-            <PageNavbar_ />
+            <PageNavbar />
             {children}
         </>
     )

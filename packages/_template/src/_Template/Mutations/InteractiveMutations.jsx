@@ -1,5 +1,4 @@
-import { CardCapsule } from "../Components"
-import { VectorItemsURI } from "../Pages"
+import { CardCapsule, VectorItemsURI } from "../Components"
 import { CreateButton, CreateLink } from "./Create"
 import { UpdateButton, UpdateLink } from "./Update"
 import { ProxyLink } from "../../../../_template/src/Base/Components/ProxyLink"

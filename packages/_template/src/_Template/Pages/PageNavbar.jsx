@@ -1,7 +1,9 @@
 import Nav from 'react-bootstrap/Nav'
-import { ProxyLink, MyNavbar, useHash } from '@hrbolek/uoisfrontend-shared';
-
-import { LinkURI } from '../Components'
+import { Link, LinkURI } from '../Components'
+import { ProxyLink } from '../../../../_template/src/Base/Components/ProxyLink';
+import { NavDropdown } from 'react-bootstrap';
+import { UpdateLink } from '../Mutations/Update';
+import { CreateButton } from '../Mutations/Create';
 
 /**
  * Allow to use HashContainer for determination which component at page will be rendered.
@@ -16,12 +18,12 @@ import { LinkURI } from '../Components'
  * </TemplateLargeCard>
  * it is usefull to define globally active "areas" like science, administration, teaching, ...
  */
-const TemplatePageSegments = [
-    { segment: 'education', label: 'Výuka' },
-    { segment: 'reaserach', label: 'Tvůrčí činnost' },
-    { segment: 'administration', label: 'Organizační činnost' },
-    { segment: 'development', label: 'Rozvoj' },
-]
+// const TemplatePageSegments = [
+//     { segment: 'education', label: 'Výuka' },
+//     { segment: 'reaserach', label: 'Tvůrčí činnost' },
+//     { segment: 'administration', label: 'Organizační činnost' },
+//     { segment: 'development', label: 'Rozvoj' },
+// ]
 
 /**
  * A navigation button component that generates a URL based on the template's ID and a specific segment.
@@ -55,15 +57,15 @@ const TemplatePageSegments = [
  * <TitleNavButton template={{ id: 456 }} segment="settings" label="Template Settings" />
  * // Resulting URL: `/ug/template/view/456#settings`
  */
-const TitleNavButton = ({ item, segment, label, ...props }) => {
-    // const urlbase = (segment) => `/templates/template/${segment}/${template?.id}`;
-    const urlbase = (segment) => `${LinkURI}${item?.id}#${segment}`;
-    return (
-        <Nav.Link as={"span"} {...props}>
-            {/* <ProxyLink to={urlbase(segment)}>{label}</ProxyLink> */}
-        </Nav.Link>
-    );
-};
+// const TitleNavButton = ({ item, segment, label, ...props }) => {
+//     // const urlbase = (segment) => `/templates/template/${segment}/${template?.id}`;
+//     const urlbase = (segment) => `${LinkURI}${item?.id}#${segment}`;
+//     return (
+//         <Nav.Link as={"span"} {...props}>
+//             {/* <ProxyLink to={urlbase(segment)}>{label}</ProxyLink> */}
+//         </Nav.Link>
+//     );
+// };
 
 /**
  * Renders the navigation bar for an Template page.
@@ -87,24 +89,72 @@ const TitleNavButton = ({ item, segment, label, ...props }) => {
  * const template = { id: 123, ... };
  * <TemplatePageNavbar template={template} onSearchChange={handleSearchChange} />
  */
-export const PageNavbar = ({ item, children, onSearchChange }) => {
-    // const [currentHash, setHash] = useHash(); // Use the custom hook to manage hash
-    const currentHash = "da"
+// export const PageNavbar = ({ item, children, onSearchChange }) => {
+//     // const [currentHash, setHash] = useHash(); // Use the custom hook to manage hash
+//     const currentHash = "da"
+//     return (
+//         <div className='screen-only'>
+//             <MyNavbar onSearchChange={onSearchChange} >
+//                 {item && TemplatePageSegments.map(({ segment, label }) => (
+//                     <Nav.Item key={segment} >
+//                         <TitleNavButton
+//                             template={item}
+//                             segment={segment}
+//                             label={label}
+//                             className={segment === currentHash ? "active" : ""} aria-current={segment === currentHash ? "page" : undefined}
+//                         />
+//                     </Nav.Item>
+//                 ))}
+//                 {children}
+//             </MyNavbar>
+//         </div>
+//     );
+// };
+
+
+export const MyNavDropdown = ({ item }) => {
+    const { __typename } = item || {}
+    const hasProperType = __typename === "TemplateGQLModel"
     return (
-        <div className='screen-only'>
-            <MyNavbar onSearchChange={onSearchChange} >
-                {item && TemplatePageSegments.map(({ segment, label }) => (
-                    <Nav.Item key={segment} >
-                        <TitleNavButton
-                            template={item}
-                            segment={segment}
-                            label={label}
-                            className={segment === currentHash ? "active" : ""} aria-current={segment === currentHash ? "page" : undefined}
-                        />
-                    </Nav.Item>
-                ))}
-                {children}
-            </MyNavbar>
-        </div>
-    );
-};
+        <NavDropdown title="Skupiny">
+            <NavDropdown.Item as={ProxyLink} to={VectorItemsURI}>
+                Seznam všech 
+            </NavDropdown.Item>
+            
+            <NavDropdown.Item as={Link} item={item} action="roles" disabled={!hasProperType}>
+                Role<br/><Link item={item} />
+            </NavDropdown.Item>
+            <NavDropdown.Item as={Link} item={item} action="subgroups" disabled={!hasProperType}>
+                Podskupiny<br/><Link item={item} />
+            </NavDropdown.Item>
+            <NavDropdown.Item as={Link} item={item} action="memberships" disabled={!hasProperType}>
+                Členové<br/><Link item={item} />
+            </NavDropdown.Item>
+        
+        
+            <NavDropdown.Divider />
+            
+            <NavDropdown.Item 
+                as={UpdateLink} 
+                item={item}
+                disabled={!hasProperType} 
+            >
+                Upravit<br/><Link item={item} />
+            </NavDropdown.Item>
+            <NavDropdown.Item 
+                as={CreateButton} 
+                item={item} 
+                disabled={!hasProperType} 
+                initialItem={{
+                    group: item,
+                    groupId: item?.groupId
+                }}
+            >
+                Nové<br/><Link item={item} />
+            </NavDropdown.Item>
+            
+            <NavDropdown.Divider />
+            <NavDropdown.Item as={ProxyLink} to={`/generic/${item?.__typename}/__def/${item?.id}`} reloadDocument={false}>Definice</NavDropdown.Item >
+        </NavDropdown>
+    )
+}

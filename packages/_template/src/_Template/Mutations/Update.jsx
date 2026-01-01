@@ -54,7 +54,7 @@ export const UpdateDialog = ({
 }) => {
     return <BaseUpdateDialog 
         {...props} 
-        DefaultContent={DefaultContent} 
+        DefaultContent={DefaultContent_} 
         mutationAsyncAction={mutationAsyncAction}
         {...permissions}
     />
@@ -67,7 +67,7 @@ export const UpdateBody = ({
 }) => {
     return <BaseUpdateBody 
         {...props} 
-        DefaultContent={DefaultContent} 
+        DefaultContent={DefaultContent_} 
         mutationAsyncAction={mutationAsyncAction}
         {...permissions}
     />

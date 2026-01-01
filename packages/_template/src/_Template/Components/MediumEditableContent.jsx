@@ -1,4 +1,4 @@
-import { Input } from "@hrbolek/uoisfrontend-shared"
+import { Input } from "../../../../_template/src/Base/FormControls/Input"
 
 /**
  * A component that displays medium-level content for an template entity.

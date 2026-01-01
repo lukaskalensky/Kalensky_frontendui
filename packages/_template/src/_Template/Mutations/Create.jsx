@@ -24,29 +24,41 @@ export const CreateLink = ({
 
 export const CreateButton = ({
     mutationAsyncAction=MutationAsyncAction,
+    CreateDialog: CreateDialog_=CreateDialog,
     DefaultContent:defaultContent=DefaultContent,
     readItemURI=ReadItemURI, 
+    rbacitem,
+    initialitem={
+        name: "Nový",
+    },
     ...props
 }) => {
     return <BaseCreateButton 
         {...props}
         DefaultContent={defaultContent} 
+        CreateDialog={CreateDialog_}
         readItemURI={readItemURI}
+        rbacitem={rbacitem}
+        initialitem={initialitem}
         mutationAsyncAction={mutationAsyncAction}
         {...permissions}
     />
 }
 
 export const CreateDialog = ({
+    title = "Nov(ý/é)",
     mutationAsyncAction=MutationAsyncAction,
     DefaultContent:defaultContent=DefaultContent,
     readItemURI=ReadItemURI, 
+    initialItem,
     ...props
 }) => {
     return <BaseCreateDialog 
         {...props} 
+        title={title}
         DefaultContent={defaultContent} 
         readItemURI={readItemURI}
+        initialItem={initialItem}
         mutationAsyncAction={mutationAsyncAction}
     />
 };
