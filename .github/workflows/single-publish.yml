@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       workspace_name:
-        description: "skolni projekt Kalensky/Jasansky"
+        description: "@lukaskalensky/Kalensky_frontend01"
         required: true
         type: string
 
