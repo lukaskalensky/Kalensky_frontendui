@@ -1,6 +1,6 @@
 {
-    "name": "@lukas.kalensky/kalensky_frontend01",
-    "version": "0.0.1",
+    "name": "@hrbolek/uoisfrontend-template",
+    "version": "0.6.2",
     "private": false,
     "publishConfig": {
         "access": "public"
