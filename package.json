@@ -34,7 +34,7 @@
     "jsdom": "^27.0.1",
     "npm-check-updates": "^19.2.0",
     "vite-plugin-compression": "^0.5.1",
-    "vite-plugin-pwa": "^0.21.1",
+    "vite-plugin-pwa": "^0.19.8",
     "vitest": "^4.0.15"
   },
   "dependencies": {
