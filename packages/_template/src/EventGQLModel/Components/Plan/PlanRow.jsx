@@ -321,6 +321,7 @@ const enrichEvent = (event) => {
         }
     }
 }
+
 export const FlexRow = ({ children }) => {
     return (
         <div

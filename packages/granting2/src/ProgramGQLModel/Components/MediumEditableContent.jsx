@@ -1,8 +1,4 @@
-import { Attribute } from "../../../../_template/src/Base/Components/Attribute"
-// import { Col as Col_ } from "../../../../_template/src/Base/Components/Col"
-// import { Row } from "../../../../_template/src/Base/Components/Row"
-import { Roles } from "../Vectors/Roles"
-// import { UserRoles } from "../Vectors/UserRoles"
+import { Input } from "../../../../_template/src/Base/FormControls/Input"
 
 /**
  * A component that displays medium-level content for an template entity.
@@ -27,23 +23,13 @@ import { Roles } from "../Vectors/Roles"
  *   <p>Additional information about the entity.</p>
  * </TemplateMediumContent>
  */
-export const MediumContent = ({ item, children}) => {
+export const MediumEditableContent = ({ item, onChange=(e)=>null, onBlur=(e)=>null, children}) => {
     return (
-        <div>
-            <Attribute attribute_name="id" label="ID" item={item} />
-            <Attribute attribute_name="name" label="Jméno" item={item} />
-            <Attribute attribute_name="surname" label="Příjmení" item={item} />
-            <Attribute attribute_name="fullname" label="Celé jméno" item={item} />
-            <Attribute attribute_name="email" label="Email" item={item} />
-            <Attribute attribute_name="email" label="Email" item={item}>
-                <a href={`mailto:${item?.email}`}>{item?.email}</a>
-            </Attribute>
-            <Attribute label="Telefon" item={item}>
-                <a href={`tel:+420800101202`}>800 101 202</a>
-            </Attribute>
+        <>           
+        {/* defaultValue={item?.name|| "Název"}  */}
+            <Input id={"name"} label={"Jméno"} className="form-control" value={item?.name|| "Název"} onChange={onChange} onBlur={onBlur} />
+            <Input id={"nameEn"} label={"Anglický název"} className="form-control" value={item?.nameEn|| "Anglický název"} onChange={onChange} onBlur={onBlur} />
             {children}
-        </div>
-        
+        </>
     )
 }
-
