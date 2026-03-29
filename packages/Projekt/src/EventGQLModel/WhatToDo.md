@@ -17,7 +17,7 @@
 
 At some point you should restart vite.
 
-- use http://localhost:8001/doc and graphiql at http://localhost:8001/gql to get queries and update AsyncActions, fragments, etc. in directory Queries, as an alternative uri you could use http://localhost:33001/
+- use http://localhost:8001/doc and graphiql at http://localhost:8001/gql to get queries and update AsyncActions, fragments, etc. in directory Queries
   - readById
   - readPage
   - mutations (CUD)
