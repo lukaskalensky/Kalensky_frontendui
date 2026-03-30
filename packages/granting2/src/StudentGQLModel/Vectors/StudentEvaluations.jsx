@@ -144,10 +144,12 @@ const SubjectEvaluation2 = ({ item }) => {
     return (<>
         {semesters.map(semester => semester?.evaluations?.map(evaluation => <tr key={`${semester?.id}-${evaluation?.id}`}>
             <td>
-                {item?.name}
+                <BaseLink item={item} />
             </td>
             <td>
-                {semester?.order}
+                <BaseLink item={semester}>
+                    {semester?.order}
+                </BaseLink>
             </td>
             <td>
                 {evaluation?.classificationlevel?.name || evaluation?.classificationlevel?.id}
