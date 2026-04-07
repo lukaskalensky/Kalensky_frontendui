@@ -92,5 +92,37 @@ import { Link } from "./Link"
 //         </>
 //     )
 // }
+import {Attribute, formatDateTime} from "../../../../_template/src/Base/Components"
 
-export { MediumContent } from "../../../../_template/src/Base/Components/MediumContent"
+
+export const MediumContent= ({ item, children }) => {
+    return (
+        <>
+        <Attribute label ="id">
+            <Link item = {item} />
+        </Attribute>
+
+        <Attribute name="id" label="order">
+            <Link item={item}>
+                {item?.order || item?.id || "Data error"}
+            </Link>
+        </Attribute>
+        <hr/>
+        <Attribute label = "Zmeneno">
+            {formatDateTime(item?.lastchange)}
+            {item?.changedby?.fullname}
+        </Attribute>
+        <hr/>
+        {item?.id}
+        <hr/>
+        <pre>
+            {JSON.stringify(item, null, 2)}
+        </pre>
+        </>
+        /*    <MediumContent item={item}>
+                Zkouska signalu
+                {children}
+            </MediumContent>
+            */
+        )
+}
