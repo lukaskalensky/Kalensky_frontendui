@@ -52,3 +52,4 @@ export const Link = ({ item, LinkURI: LinkURI_ = LinkURI, action="view", childre
 }
 
 registerLink('StudyplanGQLModel', Link)
+registerLink('SemesterGQLModel', Link)

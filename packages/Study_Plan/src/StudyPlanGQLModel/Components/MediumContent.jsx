@@ -1,3 +1,4 @@
+import { Attribute, formatDateTime } from "../../../../_template/src"
 import { Col } from "../../../../_template/src/Base/Components/Col"
 import { Row } from "../../../../_template/src/Base/Components/Row"
 import { Link } from "./Link"
@@ -92,7 +93,6 @@ import { Link } from "./Link"
 //         </>
 //     )
 // }
-import {Attribute, formatDateTime} from "../../../../_template/src/Base/Components"
 
 
 export const MediumContent= ({ item, children }) => {
@@ -118,11 +118,8 @@ export const MediumContent= ({ item, children }) => {
         <pre>
             {JSON.stringify(item, null, 2)}
         </pre>
+        <label>Zkouska signalu</label>
         </>
-        /*    <MediumContent item={item}>
-                Zkouska signalu
-                {children}
-            </MediumContent>
-            */
+            
         )
 }
