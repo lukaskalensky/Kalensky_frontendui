@@ -4,8 +4,10 @@ import { PageCreateItem } from "./PageCreateItem"
 import { PageReadItem } from "./PageReadItem"
 import { PageDeleteItem } from "./PageDeleteItem"
 
+
+import { MujPokusPage } from "./muj_pokus_page"
 import { DeleteItemURI, UpdateItemURI } from "../Components"
-import { CreateURI, ReadItemURI, VectorItemsURI } from "../Components"
+import { CreateURI, ReadItemURI, VectorItemsURI, MyNewPageURI } from "../Components"
 
 /**
  * Definice segmentů rout pro Template stránky.
@@ -37,6 +39,10 @@ import { CreateURI, ReadItemURI, VectorItemsURI } from "../Components"
  * }
  */
 export const StudyplanGQLModelRouterSegments = [
+    {
+        path: MyNewPageURI,
+        element: (<MujPokusPage />),
+    },
     {
         path: CreateURI,
         element: (<PageCreateItem />),

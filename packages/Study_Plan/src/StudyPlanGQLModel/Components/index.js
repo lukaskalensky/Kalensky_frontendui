@@ -8,6 +8,6 @@ export * from './MediumCard'
 
 export * from './MediumEditableContent'
 export * from './LiveEdit'
-
+export * from './muj_pokus_componenta'
 
 export * from './ConfirmEdit'

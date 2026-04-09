@@ -13,6 +13,7 @@ export const LinkURI = ReadURI;
 export const VectorItemsURI = ListURI;
 
 const idParam = ":id"
+export const MyNewPageURI = `${modelURI}/moje-nova-stranka/${idParam}`
 export const ReadItemURI = `${LinkURI}${idParam}`;
 export const UpdateItemURI = `${UpdateURI}${idParam}`;
 export const DeleteItemURI = `${DeleteURI}${idParam}`;
