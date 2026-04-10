@@ -18,6 +18,8 @@ export const ReadItemURI = `${LinkURI}${idParam}`;
 export const UpdateItemURI = `${UpdateURI}${idParam}`;
 export const DeleteItemURI = `${DeleteURI}${idParam}`;
 
+//fetch, local storage prohlizes, react redux - vlozit informace, hook - ReadAsyncAction - vezne queris, zakomponovaan v PageBase
+
 /**
  * A React component that renders a `ProxyLink` to an "template" entity's view page.
  *
