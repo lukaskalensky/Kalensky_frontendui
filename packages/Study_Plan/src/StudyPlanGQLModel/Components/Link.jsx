@@ -17,7 +17,8 @@ export const MyNewPageURI = `${modelURI}/moje-nova-stranka/${idParam}`
 export const ReadItemURI = `${LinkURI}${idParam}`;
 export const UpdateItemURI = `${UpdateURI}${idParam}`;
 export const DeleteItemURI = `${DeleteURI}${idParam}`;
-
+export const OstatniURI = `${modelURI}/vseostatni/view/`;
+export const OstatniURIPage = `${OstatniURI}${idParam}`;
 //fetch, local storage prohlizes, react redux - vlozit informace, hook - ReadAsyncAction - vezne queris, zakomponovaan v PageBase
 
 /**
@@ -48,11 +49,25 @@ export const DeleteItemURI = `${DeleteURI}${idParam}`;
  * @see ProxyLink - The base component used for rendering the link.
  */
 export const Link = ({ item, LinkURI: LinkURI_ = LinkURI, action="view", children, ...props}) => {
+    
+    if (item?.__typename !== 'StudyPlanGQLModel') {
+        LinkURI_ = OstatniURI;
+       const targetURI = LinkURI_.replace('view', action);
+        return <ProxyLink to={targetURI + item?.id} {...props}>{children || item?.fullname || item?.name || item?.id || "Nevim"}</ProxyLink>
+    }
+    else
+    {
     const targetURI = LinkURI_.replace('view', action);
     return <ProxyLink to={targetURI + item?.id} {...props}>{children || item?.fullname || item?.name || item?.id || "Nevim"}</ProxyLink>
     // return <BaseUI.Link item={item} />
     // return <a>{children || item?.fullname || item?.name || item?.id || "Nevim"}</a>
+    }
 }
 
-registerLink('StudyplanGQLModel', Link)
-registerLink('SemesterGQLModel', Link)
+
+// Registrace zůstává stejná
+registerLink('StudyPlanGQLModel', Link)
+registerLink('SemesterGQLModel', Link);
+registerLink('StudyPlanLessonGQLModel', Link);
+registerLink('UserGQLModel', Link);
+registerLink('EventGQLModel', Link);

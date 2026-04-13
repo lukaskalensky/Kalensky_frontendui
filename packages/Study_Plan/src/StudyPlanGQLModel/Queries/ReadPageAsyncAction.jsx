@@ -3,9 +3,9 @@ import { LargeFragment } from "./Fragments";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
 const ReadPageQueryStr = `
-query semesterPage($skip: Int, $limit: Int, $orderby: String, $where: SemesterInputFilter) {
-  semesterPage(skip: $skip, limit: $limit, orderby: $orderby, where: $where) {
-  ...Semester
+query studyPlanPage($skip: Int, $limit: Int, $orderby: String, $where: StudyPlanInputFilter) {
+  studyPlanPage(skip: $skip, limit: $limit, orderby: $orderby, where: $where) {
+  ...StudyPlan
 }
 }
 `

@@ -3,9 +3,9 @@ import { LargeFragment } from "./Fragments";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
 const ReadQueryStr = `
-query semesterById($id: UUID!) {
-  semesterById(id: $id) {
-  ...Semester
+query studyPlanById($id: UUID!) {
+  studyPlanById(id: $id) {
+  ...StudyPlan
 }
 }
 `
