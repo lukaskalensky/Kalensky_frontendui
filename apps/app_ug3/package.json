@@ -1,8 +1,8 @@
 {
   "name": "@hrbolek/app_ug3",
   "private": false,
-  "version": "0.6.1",
-  "type": "module",
+  "version": "0.6.3",
+  "type_": "module",
   "files": [
     "dist",
     "src"
@@ -12,7 +12,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview", 
-    "build:production": "NODE_ENV=production vite build"    
+    "build:production": "NODE_ENV=production vite build",
+    "prepublishOnly": "npm run build"   
   },
   "dependencies": {
     "react": "^19.2.1",
