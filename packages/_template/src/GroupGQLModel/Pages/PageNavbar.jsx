@@ -13,7 +13,7 @@ import { VectorItemsURI as UserVectorItemsURI } from '../../UserGQLModel/Compone
 import { VectorItemsURI as GroupTypeVectorItemsURI } from '../../GroupTypeGQLModel/Components/Link';
 import { CreateGroupInserMembershipButton } from '../Mutations/AddMembership';
 import { UpdateButton, UpdateLink } from '../Mutations/Update';
-import { AddRoleOnGroupButton } from '../../RoleGQLModel/Mutations/AddRoleonGroup';
+// import { AddRoleOnGroupButton } from '../../RoleGQLModel/Mutations/AddRoleonGroup';
 import { Link } from '../../../../_template/src/Base/Components';
 import { ReadItemUniverisityURI } from './PageVectorBase';
 
@@ -251,7 +251,7 @@ export const MyNavDropdown = ({ item }) => {
             >
                 Nové členství {hasProperType&& <>({item?.name})</>}
             </NavDropdown.Item>
-            <NavDropdown.Item 
+            {/* <NavDropdown.Item 
                 as={AddRoleOnGroupButton} 
                 // item={item} 
                 rbacitem={item}
@@ -262,7 +262,7 @@ export const MyNavDropdown = ({ item }) => {
                 disabled={!hasProperType}
             >
                 Nové oprávnění {hasProperType&& <>({item?.name})</>}
-            </NavDropdown.Item>
+            </NavDropdown.Item> */}
             
             <NavDropdown.Divider />
             <NavDropdown.Item as={ProxyLink} to={`/generic/${item?.__typename}/__def/${item?.id}`} reloadDocument={false}>Definice</NavDropdown.Item >
