@@ -1,10 +1,10 @@
-name: Publish one workspace
+name: Publish one workspace 
 
 on:
   workflow_dispatch:
     inputs:
       workspace_name:
-        description: "projekt Kalensky/Jasansky"
+        description: "@lukaskalensky/Kalensky_frontend01"
         required: true
         type: string
 
