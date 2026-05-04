@@ -1,8 +1,12 @@
 {
   "name": "@lukas.kalensky/app_studyplan",
   "private": false,
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
