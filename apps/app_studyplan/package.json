@@ -1,7 +1,7 @@
 {
-  "name": "@lukas.kalensky/app_studyplan",
+  "name": "@lukaskalensky/app_studyplan",
   "private": false,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
