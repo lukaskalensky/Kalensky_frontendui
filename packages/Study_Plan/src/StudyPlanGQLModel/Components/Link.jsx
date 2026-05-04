@@ -2,7 +2,7 @@ import { URIRoot } from "../../uriroot";
 import { registerLink } from "../../../../_template/src/Base/Components/Link";
 import { ProxyLink } from "../../../../_template/src/Base/Components/ProxyLink";
 
-const modelURI = `${URIRoot}/studyplan`
+const modelURI = `${URIRoot}/StudyPlanGQLModel`
 export const ListURI = `${modelURI}/list/`;
 export const CreateURI = `${modelURI}/create/`;
 export const ReadURI = `${modelURI}/view/`;
