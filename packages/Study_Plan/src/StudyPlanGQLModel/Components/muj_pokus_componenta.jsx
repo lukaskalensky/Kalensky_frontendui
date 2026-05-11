@@ -1,5 +1,6 @@
 import React from 'react';
 import { MyForm } from './MujEntitylookup';
+import { UpdateButton, UpdateDialog, UpdateLink } from '../Mutations/Update';
 const formatLessonTime = (dateString) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
@@ -34,6 +35,7 @@ export const MyCustomWidget = ({ item, children }) => {
       <div className="mb-4">
         <h2 className="fw-bold text-uppercase mb-1" style={{ letterSpacing: '1px' }}>Detail studijního plánu</h2>
         <MyForm/>
+        <UpdateButton/>
         <div className="text-muted small">
           ID: '{id}' <span className="font-monospace">({id?.slice(0, 8)}...)</span>
         </div>
