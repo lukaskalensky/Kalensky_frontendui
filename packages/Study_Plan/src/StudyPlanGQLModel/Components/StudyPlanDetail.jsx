@@ -2,15 +2,27 @@ import { formatDateTime } from "../../../../_template/src"
 import { Link } from "./Link"
 import { ProxyLink } from "../../../../_template/src/Base/Components/ProxyLink"
 import { CreateURI } from "./Link"
+import { SelectionContext } from "./SelectionContext";
+import { useContext, useState } from 'react';
+// Zde si pak vrátíme správný import klienta, jakmile se k tomu vrátíme
+import { AddInstructorAsyncAction } from "../Queries/AddInstructor";
+import { AddLessonAsyncAction } from "../Queries/AddLesson";
+import { useDispatch } from "react-redux";
+import { InstantActionButton } from "../Mutations/Create";
 
 const InfoRow = ({ label, children }) => (
-    <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "4px", marginBottom: "10px", alignItems: "start" }}>
-        <span style={{ fontWeight: "600", color: "#333" }}>{label}</span>
-        <span>{children}</span>
+    <div className="row mb-2 align-items-start">
+        <div className="col-4 fw-semibold text-dark">{label}</div>
+        <div className="col-8">{children}</div>
     </div>
 )
 
 const TopicRow = ({ topic, lessons, planId }) => {
+    const { selectedTeacher, selectedRoom, selectedGroup } = useContext(SelectionContext);
+    const [lessonName, setLessonName] = useState("");
+    const [isExercise, setIsExercise] = useState(false);
+
+    // Spočítáme počty typů výuky pro pravou stranu hlavičky
     const lessonsByType = (lessons || []).reduce((acc, l) => {
         const typeName = l.lessontype?.name || l.lessontype?.nameEn || null;
         if (!typeName) return acc;
@@ -19,48 +31,108 @@ const TopicRow = ({ topic, lessons, planId }) => {
     }, {});
     const typeEntries = Object.entries(lessonsByType);
 
+    let urlParams = `?topicId=${topic.id}&planId=${planId || ""}`;
+    if (selectedTeacher) urlParams += `&teacherId=${selectedTeacher.id}`;
+    if (selectedRoom) urlParams += `&roomId=${selectedRoom.id}`;
+    if (selectedGroup) urlParams += `&groupId=${selectedGroup.id}`;
+
+    const payload = {
+        planitemId: planId,
+        userId: selectedTeacher?.id
+    };
+
+    const insertPayload = {
+            planId: planId,
+            topicId: topic.id,
+            name: lessonName || "Nová výuka",
+            // POZOR: Zde musíte předat reálná UUID pro typ lekce (Cvičení / Přednáška)
+            lessontypeId: isExercise ? "e2b7c66a-95e1-11ed-a1eb-0242ac120002" : "e2b7cbf6-95e1-11ed-a1eb-0242ac120002", 
+        };
+
     return (
-        <div
-            style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "12px 24px",
-                borderBottom: "1px solid #d08888",
-            }}
-        >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                <ProxyLink
-                    to={`/granting/TopicGQLModel/view/${topic.id}`}
-                    style={{ fontWeight: 500 }}
-                >
-                    {topic.name || topic.nameEn || `Téma ${topic.order ?? ""}`}
-                </ProxyLink>
-                {typeEntries.map(([type, count]) => (
-                    <span key={type} style={{ color: "#555", fontSize: "0.9rem" }}>
-                        {count} x{" "}
-                        <ProxyLink to={`/granting/TopicGQLModel/view/${topic.id}`} style={{ color: "#555" }}>
-                            {type}
-                        </ProxyLink>
-                    </span>
-                ))}
+        <div className="border-bottom border-danger border-opacity-25">
+            
+            {/* ── 1. HLAVNÍ ŘÁDEK TÉMATU ── */}
+            <div className="d-flex align-items-center justify-content-between px-4 py-3 gap-3">
+                
+                {/* Levá část: Odkaz na téma a souhrn */}
+                <div className="d-flex align-items-center flex-wrap gap-2 flex-grow-1">
+                    <ProxyLink
+                        to={`/granting/TopicGQLModel/view/${topic.id}`}
+                        className="fw-bold text-decoration-none text-dark text-nowrap"
+                    >
+                        {topic.name || topic.nameEn || `Téma ${topic.order ?? ""}`}
+                    </ProxyLink>
+                    
+                    {/* Bubliny se souhrnem typu výuky (např. 2 x přednáška) */}
+                    <div className="d-flex gap-2 ms-2">
+                        {typeEntries.map(([type, count]) => (
+                            <span key={type} className="badge bg-white text-secondary border border-secondary border-opacity-25 fw-normal">
+                                {count}x {type}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Střední část: Inputy pro rychlé přidání */}
+                <div className="d-flex align-items-center gap-3">
+                    <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder="Zadejte název výuky..."
+                        value={lessonName}
+                        onChange={(e) => setLessonName(e.target.value)}
+                        style={{ minWidth: "180px" }}
+                    />
+                    
+                    <div className="form-check form-switch mb-0 d-flex align-items-center gap-2">
+                        <input
+                            className="form-check-input mt-0"
+                            type="checkbox"
+                            role="switch"
+                            id={`switch-exercise-${topic.id}`}
+                            checked={isExercise}
+                            onChange={(e) => setIsExercise(e.target.checked)}
+                        />
+                        <label className="form-check-label small text-nowrap" htmlFor={`switch-exercise-${topic.id}`}>
+                            Cvičení
+                        </label>
+                    </div>
+                </div>
+
+                {/* Pravá část: Tlačítko */}
+                <div className="text-end" style={{ minWidth: "140px" }}>
+                    <InstantActionButton
+                        mutationAsyncAction={AddLessonAsyncAction}
+                        item={insertPayload} // Zde vložíte vaše připravená data
+                        className="btn btn-outline-secondary btn-sm w-100"
+                        // Parametr readItemURI můžete nastavit na null, pokud nechcete po uložení přesměrovat
+                        readItemURI={null} 
+                    >
+                        Ulozit
+                    </InstantActionButton>
+                </div>
             </div>
-            <ProxyLink
-                to={`${CreateURI}?topicId=${topic.id}&planId=${planId || ""}`}
-                style={{
-                    minWidth: "500px",
-                    textAlign: "center",
-                    padding: "8px 20px",
-                    border: "1px solid #aaa",
-                    borderRadius: "4px",
-                    background: "#fff",
-                    color: "#333",
-                    textDecoration: "none",
-                    display: "inline-block",
-                }}
-            >
-                Přidat výuku
-            </ProxyLink>
+
+            {/* ── 2. SEZNAM LEKCÍ (PODTITULY) ── */}
+            {lessons && lessons.length > 0 && (
+                <div className="px-5 pb-3">
+                    <div className="d-flex flex-column gap-1">
+                        {lessons.map((lesson) => (
+                            <div key={lesson.id} className="d-flex align-items-center gap-2 py-1 px-3 rounded" style={{ backgroundColor: "rgba(255,255,255,0.4)" }}>
+                                <span className="fw-medium text-dark">{lesson.name || "Bez názvu"}</span>
+                                
+                                {/* Typ výuky jako štítek */}
+                                {lesson.lessontype?.name && (
+                                    <span className="badge bg-light text-secondary border ms-2">
+                                        {lesson.lessontype.name}
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -73,37 +145,32 @@ export const StudyPlanDetail = ({ item, children }) => {
 
     const topics = semester?.topics || []
     const lessons = item?.lessons || []
+    
+    // Rozřazení lekcí k tématům
     const lessonsByTopic = lessons.reduce((acc, l) => {
         const tid = l.topicId;
         if (!acc[tid]) acc[tid] = [];
         acc[tid].push(l);
         return acc;
     }, {});
+    
+    // ZMĚNA: Odstranil jsem `.filter(...)`, aby se zobrazila i témata, 
+    // která zatím žádnou výuku nemají. Jinak byste k nim nemohl nic přidat.
     const sortedTopics = [...topics]
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-        .filter(t => (lessonsByTopic[t.id] || []).length > 0);
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     return (
-        <div style={{ minHeight: "100vh" }}>
+        <div className="min-vh-100">
 
             {/* ── top section: info panel (left) + entity lookups (right) ── */}
-            <div style={{ background: "#fff", padding: "12px 0" }}>
-                <div style={{ display: "flex", alignItems: "flex-start" }}>
-
-                    {/* LEFT: study plan info */}
-                    <div style={{
-                        width: "280px",
-                        flexShrink: 0,
-                        padding: "12px 16px",
-                        margin: "10px 16px",
-                        background: "#fff",
-                        border: "1px solid #b8d0bb",
-                        borderRadius: "6px",
-                    }}>
-                        <div style={{ marginBottom: "12px", display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                            <span style={{ fontSize: "1rem", lineHeight: 1.4 }}>👤</span>
+            <div className="bg-white py-2">
+                <div className="row g-0 align-items-start">
+                    <div className="col-12 col-md-4 col-lg-3 p-3 mx-3 my-2 bg-white rounded border border-success border-opacity-50">
+                        {/* ... Info panel kódu (beze změny) ... */}
+                        <div className="d-flex align-items-start gap-1 mb-3">
+                            <span className="fs-6 lh-sm">👤</span>
                             <Link item={item}>
-                                <span style={{ wordBreak: "break-all", fontSize: "0.85rem" }}>
+                                <span className="text-break small">
                                     {item?.id?.toUpperCase()}
                                 </span>
                             </Link>
@@ -113,38 +180,34 @@ export const StudyPlanDetail = ({ item, children }) => {
                             <Link item={semester}>
                                 {subjectName && semesterOrder
                                     ? <>{subjectName} / {semesterOrder}</>
-                                    : <span style={{ color: "#888", fontStyle: "italic" }}>Missing</span>
+                                    : <span className="text-muted fst-italic">Missing</span>
                                 }
                             </Link>
                         </InfoRow>
 
                         <InfoRow label="Období">
                             <Link item={semester}>
-                                <span style={{ color: "#888", fontStyle: "italic" }}>Missing</span>
+                                <span className="text-muted fst-italic">Missing</span>
                             </Link>
                         </InfoRow>
 
-                        <div style={{ color: "#888", marginBottom: "10px", marginLeft: "94px" }}>- -</div>
+                        <div className="row mb-2">
+                            <div className="col-4"></div>
+                            <div className="col-8 text-muted">- -</div>
+                        </div>
 
                         <InfoRow label="Zkouška">
                             {examName
                                 ? <Link item={item?.exam}>{examName}</Link>
                                 : <Link item={item?.exam}>
-                                    <span style={{ color: "#888", fontStyle: "italic" }}>Missing</span>
+                                    <span className="text-muted fst-italic">Missing</span>
                                 </Link>
                             }
                         </InfoRow>
 
-                        {/* Vytvořeno / Změněno – ohraničená sekce */}
-                        <div style={{
-                            marginTop: "10px",
-                            padding: "8px 10px",
-                            border: "1px solid #b8d0bb",
-                            borderRadius: "5px",
-                            background: "#f7fbf8",
-                        }}>
+                        <div className="mt-3 p-2 rounded border border-success border-opacity-25 bg-success bg-opacity-10">
                             <InfoRow label="Vytvořeno">
-                                <span style={{ fontSize: "0.85rem" }}>
+                                <span className="small">
                                     <Link item={item?.createdby}>
                                         {item?.createdby?.fullname || "—"}
                                     </Link>
@@ -153,7 +216,7 @@ export const StudyPlanDetail = ({ item, children }) => {
                             </InfoRow>
 
                             <InfoRow label="Změněno">
-                                <span style={{ fontSize: "0.85rem" }}>
+                                <span className="small">
                                     <Link item={item?.changedby}>
                                         {item?.changedby?.fullname || "—"}
                                     </Link>
@@ -163,20 +226,16 @@ export const StudyPlanDetail = ({ item, children }) => {
                         </div>
                     </div>
 
-                    {/* divider */}
-                    <div style={{ width: "1px", alignSelf: "stretch", background: "#a8c8b0", margin: "8px 0", flexShrink: 0 }} />
-
-                    {/* RIGHT: entity lookups (children = MyCustomWidget) */}
-                    <div style={{ flex: 1, padding: "8px 24px", background: "#fff" }}>
+                    <div className="col-12 col-md px-4 py-2 bg-white border-start border-success border-opacity-50">
                         {children}
                     </div>
                 </div>
             </div>
 
             {/* ── bottom section: topics full width ── */}
-            <div style={{ background: "#e8b4b8", paddingTop: "4px" }}>
+            <div className="pt-1 bg-danger bg-opacity-25">
                 {sortedTopics.length === 0 ? (
-                    <div style={{ padding: "24px", color: "#666", fontStyle: "italic" }}>
+                    <div className="p-4 text-secondary fst-italic">
                         Žádná témata nebyla nalezena.
                     </div>
                 ) : (

@@ -3,6 +3,8 @@ import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAs
 import { MyCustomWidget } from "../Components/muj_pokus_componenta";
 import { PageItemBase } from "./PageBase";
 import { StudyPlanDetail } from "../Components";
+import { SelectionContext } from "../Components/SelectionContext";
+import { useState } from "react";
 
 const MujPokusQueryStr = `
 fragment User on UserGQLModel {
@@ -122,11 +124,26 @@ const MujPokusQuery = createQueryStrLazy(MujPokusQueryStr);
 export const FetchMojeDataAction = createAsyncGraphQLAction2(MujPokusQuery);
 
 export const MujPokusPage = () => {
+
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [selectedGroup, setSelectedGroup] = useState(null);
+
+    // Vložíme je do jednoho objektu
+    const contextValue = {
+        selectedTeacher, setSelectedTeacher,
+        selectedRoom, setSelectedRoom,
+        selectedGroup, setSelectedGroup
+    };
+
+
     return (
+      <SelectionContext.Provider value={contextValue}>
         <PageItemBase
             queryAsyncAction={FetchMojeDataAction}
             SubPage={MyCustomWidget}
             ItemLayout={StudyPlanDetail}
         />
+        </SelectionContext.Provider>
     );
 };

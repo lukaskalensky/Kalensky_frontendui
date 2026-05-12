@@ -3,33 +3,31 @@ import { EntityLookup } from '../../../../_template/src';
 import { SearchAsyncAction } from '../Queries/SearchAsyncAction';
 import { SearchGroupAsyncAction } from '../Queries/SearchGroupAsyncAction';
 import { SearchRoomAsyncAction } from '../Queries/SearchRoomAsyncAction';
+import { SelectionContext } from './SelectionContext';
+import { useContext } from 'react';
 
-const LOOKUP_YELLOW = "#e8c040";
-
-const EntityLookupCard = ({ title, asyncAction }) => {
-    const [selected, setSelected] = useState(null);
+const EntityLookupCard = ({ title, asyncAction, selected, onSelectChange }) => {
 
     return (
-        <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, marginBottom: 6, fontSize: "0.95rem" }}>{title}</div>
-            <div
-                style={{
-                    background: LOOKUP_YELLOW,
-                    borderRadius: "4px",
-                    padding: "8px 12px",
-                }}
-            >
+        <div className="col">
+            <div className="fw-semibold mb-1 fs-6">
+                {title}
+            </div>
+            <div className="rounded px-3 py-2 bg-warning">
                 <EntityLookup
                     id={`lookup-${title}`}
                     asyncAction={asyncAction}
                     value={selected}
-                    onSelect={(entity) => { setSelected(entity); return { clear: true }; }}
+                    onSelect={(entity) => { 
+                        onSelectChange(entity); // Zavoláme funkci od rodiče a předáme jí entitu
+                        return { clear: true }; 
+                    }}
                     placeholder="Napište alespoň 3 znaky"
                 />
             </div>
             {selected && (
-                <div style={{ marginTop: 4, fontSize: "0.82rem", color: "#444" }}>
-                    Vybráno: <strong>{selected.fullname || selected.name}</strong>
+                <div className="mt-1 small text-secondary">
+                    Vybráno: <strong className="fw-bold">{selected.fullname || selected.name}</strong>
                 </div>
             )}
         </div>
@@ -37,13 +35,23 @@ const EntityLookupCard = ({ title, asyncAction }) => {
 };
 
 export const MyCustomWidget = ({ item }) => {
+
+    const { 
+        selectedTeacher, setSelectedTeacher,
+        selectedRoom, setSelectedRoom,
+        selectedGroup, setSelectedGroup 
+    } = useContext(SelectionContext);
+
     if (!item) return null;
 
     return (
-        <div style={{ display: "flex", gap: "48px", alignItems: "flex-start" }}>
-            <EntityLookupCard title="Vyučující" asyncAction={SearchAsyncAction} />
-            <EntityLookupCard title="Místnosti" asyncAction={SearchRoomAsyncAction} />
-            <EntityLookupCard title="Skupiny" asyncAction={SearchGroupAsyncAction} />
+        <div className="row gap-5 align-items-start">
+            <EntityLookupCard title="Vyučující" asyncAction={SearchAsyncAction} selected={selectedTeacher}
+                onSelectChange={setSelectedTeacher} />
+            <EntityLookupCard title="Místnosti" asyncAction={SearchRoomAsyncAction} selected={selectedRoom}
+                onSelectChange={setSelectedRoom}/>
+            <EntityLookupCard title="Skupiny" asyncAction={SearchGroupAsyncAction} selected={selectedGroup}
+                onSelectChange={setSelectedGroup}/>
         </div>
     );
 };

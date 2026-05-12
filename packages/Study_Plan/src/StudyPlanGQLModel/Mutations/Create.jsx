@@ -6,12 +6,14 @@ import {
     CreateDialog as BaseCreateDialog, 
     CreateLink  as BaseCreateLink
 } from "../../../../_template/src/Base/Mutations/Create"
+import { useEffect } from 'react';
+
 
 const DefaultContent = (props) => <MediumEditableContent {...props} />
 const MutationAsyncAction = InsertAsyncAction
 
 const permissions = {
-    oneOfRoles: ["superadmin"],
+    oneOfRoles: ["studijní administrátor"],
     mode: "absolute",
 }
 
@@ -83,6 +85,42 @@ export const CreateLink = ({
  *
  * @returns {JSX.Element} Vykreslí `BaseCreateButton` s přednastavenými defaulty a RBAC oprávněními.
  */
+const AutoSubmitDialog = (props) => {
+    // Tohle nám ukáže, jestli se komponenta vůbec vykreslila do DOMu
+    console.log("Falešný dialog inicializován. Props:", props);
+
+    useEffect(() => {
+        // Pokud BaseCreateButton změní stav na true, spustíme akci
+        if (props.show) {
+            console.log("Falešný dialog OTEVŘEN! Odesílám data...");
+            
+            if (props.mutationAsyncAction) {
+                // Zavoláme funkci, kterou jsme mu poslali ze StudyPlanDetail
+                props.mutationAsyncAction(props.item); 
+            }
+
+            // Bezpečné zavření dialogu (podpora více verzí šablony)
+            if (props.onHide) props.onHide();
+            if (props.handleClose) props.handleClose();
+            if (props.close) props.close();
+        }
+    }, [props.show]);
+
+    // Místo null vracíme skrytý prvek, aby si Bootstrap nestěžoval
+    return <div style={{ display: 'none' }}>Falešný dialog</div>;
+};
+
+export const InstantActionButton = (props) => {
+    return (
+        <CreateButton 
+            {...props} 
+            CreateDialog={AutoSubmitDialog} 
+        />
+    );
+};
+
+
+
 export const CreateButton = ({
     mutationAsyncAction=MutationAsyncAction,
     CreateDialog: CreateDialog_=CreateDialog,
