@@ -4,18 +4,15 @@ import {
     RouterProvider,
 } from "react-router-dom";
 import { NavigationHistoryLinks, NavigationHistoryProvider } from '../../../packages/_template/src/Base/Helpers/NavigationHistoryProvider';
-
 import { BaseRouterSegments } from "../../../packages/_template/src/Base/Pages/RouterSegment";
 
-// import { GroupRouterSegments } from "../../../packages/_template/src/GroupGQLModel/Pages/RouterSegment";
-// import { RoleTypeRouterSegments } from "../../../packages/_template/src/RoleTypeGQLModel/Pages";
-// import { UserRouterSegments } from "../../../packages/_template/src/UserGQLModel/Pages/RouterSegment";
-// import { GroupTypeRouterSegments } from "../../../packages/_template/src/GroupTypeGQLModel/Pages/RouterSegment";
-// import { RoleRouterSegments } from "../../../packages/_template/src/RoleGQLModel/Pages";
-// import { Page } from "../../../packages/_template/src/Base/Pages/Page";
 import { AppNavbar } from "./AppNavbar";
 import { StudyplanGQLModelRouterSegments } from "../../../packages/Study_Plan/src/StudyPlanGQLModel/Pages/RouterSegment";
-
+import { ProgramGQLModelRouterSegments } from "../../../packages/granting2/src/ProgramGQLModel/Pages/RouterSegment";
+import { StudentGQLModelRouterSegments } from "../../../packages/granting2/src/StudentGQLModel/Pages/RouterSegment";
+import { SemesterGQLModelRouterSegments } from "../../../packages/granting2/src/SemesterGQLModel/Pages/RouterSegment";
+import { TopicGQLModelRouterSegments } from "../../../packages/granting2/src/TopicGQLModel/Pages/RouterSegment";
+import { StudyPlanGQLModelRouterSegments } from "../../../packages/granting2/src/StudyPlanGQLModel/Pages/RouterSegment";
 
 const AppLayout = () => (
     <NavigationHistoryProvider>
@@ -27,23 +24,19 @@ const AppLayout = () => (
 
 const Routes = [
     {
-        path: "/",          // root
+        path: "/",
         element: <AppLayout />,
         children: [
             ...StudyplanGQLModelRouterSegments,
+            ...ProgramGQLModelRouterSegments,
+            ...StudentGQLModelRouterSegments,
+            ...SemesterGQLModelRouterSegments,
+            ...TopicGQLModelRouterSegments,
+            ...StudyPlanGQLModelRouterSegments,
             ...BaseRouterSegments,
-            // ...GroupRouterSegments,
-            // ...RoleTypeRouterSegments,
-            // ...UserRouterSegments,
-            // ...GroupTypeRouterSegments,
-            // ...RoleRouterSegments,
-            
         ],
     },
 ];
-
-// console.log("Routes", Routes)
-// console.log("Routes", GroupRouterSegments)
 
 const router = createBrowserRouter(Routes);
 
