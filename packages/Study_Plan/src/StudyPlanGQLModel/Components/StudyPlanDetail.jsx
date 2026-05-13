@@ -9,6 +9,9 @@ import { AddInstructorAsyncAction } from "../Queries/AddInstructor";
 import { AddLessonAsyncAction } from "../Queries/AddLesson";
 import { useDispatch } from "react-redux";
 import { InstantActionButton } from "../Mutations/Create";
+import { useAsync } from "../../../../dynamic/src/Hooks";
+import { AsyncStateIndicator } from "../../../../_template/src/Base";
+
 
 const InfoRow = ({ label, children }) => (
     <div className="row mb-2 align-items-start">
@@ -48,6 +51,31 @@ const TopicRow = ({ topic, lessons, planId }) => {
             // POZOR: Zde musíte předat reálná UUID pro typ lekce (Cvičení / Přednáška)
             lessontypeId: isExercise ? "e2b7c66a-95e1-11ed-a1eb-0242ac120002" : "e2b7cbf6-95e1-11ed-a1eb-0242ac120002", 
         };
+        
+    const { run, loading, error } = useAsync(AddLessonAsyncAction, null, { deferred: true });
+
+    const handleSave = async () => {
+        // Příprava dat pro mutaci podle parametrů v AddLesson.jsx
+        const insertPayload = {
+            planId: planId,
+            topicId: topic.id,
+            name: lessonName || "Nová výuka",
+            lessontypeId: isExercise 
+                ? "e2b7c66a-95e1-11ed-a1eb-0242ac120002" // ID pro cvičení
+                : "e2b7cbf6-95e1-11ed-a1eb-0242ac120002", // ID pro přednášku
+        };
+
+        try {
+            // Spuštění mutace přes funkci run
+            const response = await run(insertPayload);
+            console.log("Lekce úspěšně přidána:", response);
+            
+            setLessonName(""); // Vyčištění pole po úspěchu
+            alert("Lekce byla přidána.");
+        } catch (err) {
+            console.error("Chyba při ukládání lekce:", err);
+        }
+    };
 
     return (
         <div className="border-bottom border-danger border-opacity-25">
@@ -102,15 +130,13 @@ const TopicRow = ({ topic, lessons, planId }) => {
 
                 {/* Pravá část: Tlačítko */}
                 <div className="text-end" style={{ minWidth: "140px" }}>
-                    <InstantActionButton
-                        mutationAsyncAction={AddLessonAsyncAction}
-                        item={insertPayload} // Zde vložíte vaše připravená data
-                        className="btn btn-outline-secondary btn-sm w-100"
-                        // Parametr readItemURI můžete nastavit na null, pokud nechcete po uložení přesměrovat
-                        readItemURI={null} 
-                    >
-                        Ulozit
-                    </InstantActionButton>
+                    <button 
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={handleSave}
+                    disabled={loading}
+                >
+                    {loading ? "Ukládám..." : "Uložit lekci"}
+                </button>
                 </div>
             </div>
 
