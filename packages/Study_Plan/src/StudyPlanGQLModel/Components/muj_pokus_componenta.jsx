@@ -15,6 +15,7 @@ const EntityLookupCard = ({ title, asyncAction, selected, onSelectChange }) => {
             </div>
             <div className="rounded px-3 py-2 bg-warning">
                 <EntityLookup
+                    className="form-control"
                     id={`lookup-${title}`}
                     asyncAction={asyncAction}
                     value={selected}
