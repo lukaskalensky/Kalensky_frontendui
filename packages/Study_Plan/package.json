@@ -1,6 +1,6 @@
 {
-    "name": "@lukaskalensky/package_studyplan",
-    "version": "0.0.1",
+    "name": "@lukas.kalensky/kalensky_frontend01",
+    "version": "0.0.5",
     "private": false,
     "publishConfig": {
         "access": "public"
