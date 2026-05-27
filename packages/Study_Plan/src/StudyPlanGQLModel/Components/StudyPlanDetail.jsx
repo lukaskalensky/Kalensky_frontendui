@@ -3,14 +3,18 @@ import { Link } from "./Link"
 import { ProxyLink } from "../../../../_template/src/Base/Components/ProxyLink"
 import { CreateURI } from "./Link"
 import { SelectionContext } from "./SelectionContext";
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 // Zde si pak vrátíme správný import klienta, jakmile se k tomu vrátíme
 import { AddInstructorAsyncAction } from "../Queries/AddInstructor";
+import { AddRoomAsyncAction } from "../Queries/AddRoom";
+import { AddGroupAsyncAction } from "../Queries/AddGroup";
 import { AddLessonAsyncAction } from "../Queries/AddLesson";
+import { ReadLessonAsyncAction } from "../Queries/LessonType";
 import { useDispatch } from "react-redux";
 import { InstantActionButton } from "../Mutations/Create";
-import { useAsync } from "../../../../dynamic/src/Hooks";
+import { useAsync, useAsyncThunkAction } from "../../../../dynamic/src/Hooks";
 import { AsyncStateIndicator } from "../../../../_template/src/Base";
+import { FetchMojeDataAction } from "../Pages/muj_pokus_page";
 
 
 const InfoRow = ({ label, children }) => (
@@ -23,8 +27,10 @@ const InfoRow = ({ label, children }) => (
 const TopicRow = ({ topic, lessons, planId }) => {
     const { selectedTeacher, selectedRoom, selectedGroup } = useContext(SelectionContext);
     const [lessonName, setLessonName] = useState("");
-    const [isExercise, setIsExercise] = useState(false);
 
+    const [lessonTypes, setLessonTypes] = useState([]);
+    const [selectedLessonTypeId, setSelectedLessonTypeId] = useState("");
+    
     // Spočítáme počty typů výuky pro pravou stranu hlavičky
     const lessonsByType = (lessons || []).reduce((acc, l) => {
         const typeName = l.lessontype?.name || l.lessontype?.nameEn || null;
@@ -43,26 +49,99 @@ const TopicRow = ({ topic, lessons, planId }) => {
         planitemId: planId,
         userId: selectedTeacher?.id
     };
-
-    const insertPayload = {
-            planId: planId,
-            topicId: topic.id,
-            name: lessonName || "Nová výuka",
-            // POZOR: Zde musíte předat reálná UUID pro typ lekce (Cvičení / Přednáška)
-            lessontypeId: isExercise ? "e2b7c66a-95e1-11ed-a1eb-0242ac120002" : "e2b7cbf6-95e1-11ed-a1eb-0242ac120002", 
-        };
         
     const { run, loading, error } = useAsync(AddLessonAsyncAction, null, { deferred: true });
+    const { run: reloadPlan } = useAsyncThunkAction(FetchMojeDataAction, null, { deferred: true });
+
+    const { run: fetchLessonTypes } = useAsync(ReadLessonAsyncAction, null, { deferred: true });
+
+    const { run: assignInstructor, loading: loadingInstructor } = useAsync(AddInstructorAsyncAction, null, { deferred: true });
+    const { run: assignFacility, loading: loadingFacility } = useAsync(AddRoomAsyncAction, null, { deferred: true });
+    const { run: assignGroup, loading: loadingGroup } = useAsync(AddGroupAsyncAction, null, { deferred: true });
+    
+    useEffect(() => {
+        // Pomocí limit: 1000 obejdeme případné stránkování a stáhneme všechny typy
+        fetchLessonTypes({ limit: 1000 })
+            .then((response) => {
+                // Získáme pole typů (cesta se může mírně lišit podle vaší GQL odpovědi)
+                const fetchedTypes = response?.data?.lessonTypePage || response?.lessonTypePage || [];
+                setLessonTypes(fetchedTypes);
+                
+                // Pokud server nějaké typy vrátil, automaticky předvybereme ten první
+                if (fetchedTypes.length > 0) {
+                    setSelectedLessonTypeId(fetchedTypes[0].id);
+                }
+            })
+            .catch((e) => console.error("Chyba při načítání typů výuky:", e));
+    }, []);
+
+    const fvyucujici = async (lesson) => {
+        const insertPayload = {
+           planitemId: lesson.id, 
+           userId: selectedTeacher.id,
+        };
+
+        try {
+            // Spuštění mutace přes funkci run
+            const response = await assignInstructor(insertPayload);
+            console.log("Ucitel úspěšně přidána:", response);
+            
+            //setLessonName(""); // Vyčištění pole po úspěchu
+            alert("Lekce byla přidána.");
+            await reloadPlan({ id: planId, limit: 1000 });
+        } catch (err) {
+            console.error("Chyba při ukládání vyucujiciho:", err);
+        }
+    };
+    const fmistnost = async (lesson) => {
+        const insertPayload = {
+            planitemId: lesson.id, 
+            facilityId: selectedRoom.id,
+        };
+
+        try {
+            // Spuštění mutace přes funkci run
+            const response = await assignFacility(insertPayload);
+            console.log("Mistnost úspěšně přidána:", response);
+            
+            //setLessonName(""); // Vyčištění pole po úspěchu
+            alert("Mistnost byla přidána.");
+            await reloadPlan({ id: planId, limit: 1000 });
+        } catch (err) {
+            console.error("Chyba při ukládání Mistnosti:", err);
+        }
+    };
+    const fskupina = async (lesson) => {
+        const insertPayload = {
+            planitemId: lesson.id,
+            groupId: selectedGroup.id,
+        };
+
+        try {
+            // Spuštění mutace přes funkci run
+            const response = await assignGroup(insertPayload);
+            console.log("Skupina úspěšně přidána:", response);
+            
+            //setLessonName(""); // Vyčištění pole po úspěchu
+            alert("Skupina byla přidána.");
+            await reloadPlan({ id: planId, limit: 1000 });
+        } catch (err) {
+            console.error("Chyba při ukládání Skupina:", err);
+        }
+    };
 
     const handleSave = async () => {
         // Příprava dat pro mutaci podle parametrů v AddLesson.jsx
+       if (!selectedLessonTypeId) {
+            alert("Počkejte na načtení typů výuky nebo nějaký vyberte.");
+            return;
+        }
+       
         const insertPayload = {
             planId: planId,
             topicId: topic.id,
             name: lessonName || "Nová výuka",
-            lessontypeId: isExercise 
-                ? "e2b7c66a-95e1-11ed-a1eb-0242ac120002" // ID pro cvičení
-                : "e2b7cbf6-95e1-11ed-a1eb-0242ac120002", // ID pro přednášku
+            lessontypeId: selectedLessonTypeId, // ID pro přednášku
         };
 
         try {
@@ -72,6 +151,7 @@ const TopicRow = ({ topic, lessons, planId }) => {
             
             setLessonName(""); // Vyčištění pole po úspěchu
             alert("Lekce byla přidána.");
+            await reloadPlan({ id: planId, limit: 1000 });
         } catch (err) {
             console.error("Chyba při ukládání lekce:", err);
         }
@@ -114,17 +194,22 @@ const TopicRow = ({ topic, lessons, planId }) => {
                     />
                     
                     <div className="form-check form-switch mb-0 d-flex align-items-center gap-2">
-                        <input
-                            className="form-check-input mt-0"
-                            type="checkbox"
-                            role="switch"
-                            id={`switch-exercise-${topic.id}`}
-                            checked={isExercise}
-                            onChange={(e) => setIsExercise(e.target.checked)}
-                        />
-                        <label className="form-check-label small text-nowrap" htmlFor={`switch-exercise-${topic.id}`}>
-                            Cvičení
-                        </label>
+                        <select 
+                    className="form-select form-select-sm" 
+                    value={selectedLessonTypeId}
+                    onChange={(e) => setSelectedLessonTypeId(e.target.value)}
+                    style={{ maxWidth: "150px" }}
+                >
+                    {/* Zobrazení fallbacku, dokud data nedorazí */}
+                    {lessonTypes.length === 0 && <option value="">Načítám...</option>}
+                    
+                    {/* Vykreslení stažených položek */}
+                    {lessonTypes.map((type) => (
+                        <option key={type.id} value={type.id}>
+                            {type.name || type.nameEn || type.id}
+                        </option>
+                    ))}
+                </select>
                     </div>
                 </div>
 
@@ -154,8 +239,56 @@ const TopicRow = ({ topic, lessons, planId }) => {
                                         {lesson.lessontype.name}
                                     </span>
                                 )}
+                                <div className="d-flex align-items-center gap-3 ms-3 small text-secondary">
+                
+                {/* Učitelé */}
+                {lesson.instructors && lesson.instructors.length > 0 && (
+        <span title="Vyučující">
+            👤 {lesson.instructors.map(inst => inst.surname || inst.fullname || inst.name || "Neznámý").join(', ')}
+        </span>
+    )}
+
+    {/* Místnosti */}
+    {lesson.facilities && lesson.facilities.length > 0 && (
+        <span title="Místnosti">
+            🏫 {lesson.facilities.map(fac => fac.label || fac.name || "Neznámá").join(', ')}
+        </span>
+    )}
+
+    {/* Skupiny (Opraveno na studyGroups) */}
+    {lesson.studyGroups && lesson.studyGroups.length > 0 && (
+        <span title="Skupiny">
+            👥 {lesson.studyGroups.map(grp => grp.abbreviation || grp.name || "Neznámá").join(', ')}
+        </span>
+    )}
+
+            </div>
+                                <div className="ms-auto d-flex gap-2">
+                                    <button
+                                        className="btn btn-sm btn-outline-primary"
+                                        disabled={!selectedTeacher || loadingInstructor}
+                                        onClick={() => fvyucujici(lesson)}>
+                                        {loadingInstructor ? "..." : `👤 ${selectedTeacher?.surname || "Učitel"}`}
+                                    </button>
+
+                                    <button
+                                        className="btn btn-sm btn-outline-success"
+                                        disabled={!selectedRoom || loadingFacility}
+                                        onClick={() => fmistnost(lesson)}>
+                                        {loadingFacility ? "..." : `🏫 ${selectedRoom?.label || "Místnost"}`}
+                                    </button>
+
+                                    <button
+                                        className="btn btn-sm btn-outline-warning text-dark"
+                                        disabled={!selectedGroup || loadingGroup}
+                                        onClick={() => fskupina(lesson)}>
+                                        {loadingGroup ? "..." : `👥 ${selectedGroup?.abbreviation || "Skupina"}`}
+                                    </button>
+                                </div>
                             </div>
+                            
                         ))}
+                        
                     </div>
                 </div>
             )}

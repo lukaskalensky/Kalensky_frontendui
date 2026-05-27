@@ -108,7 +108,7 @@ fragment StudyPlan on StudyPlanGQLModel {
   exam {
     ...Exam
   }
-  lessons {
+  lessons(limit: 1000) {
     ...StudyPlanLesson
   }
 }
