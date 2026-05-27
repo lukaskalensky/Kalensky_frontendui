@@ -56,6 +56,7 @@ fragment StudyPlanLesson on StudyPlanLessonGQLModel {
   order
   name
   topicId
+  lastchange
   topic {
     __typename
     id

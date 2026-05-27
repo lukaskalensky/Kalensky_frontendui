@@ -10,6 +10,10 @@ import { AddRoomAsyncAction } from "../Queries/AddRoom";
 import { AddGroupAsyncAction } from "../Queries/AddGroup";
 import { AddLessonAsyncAction } from "../Queries/AddLesson";
 import { ReadLessonAsyncAction } from "../Queries/LessonType";
+import { DeleteLessonAsyncAction } from "../Queries/DeleteLesson";
+import { DeleteGroupAsyncAction } from "../Queries/DeleteGroup";
+import { DeleteTeacherAsyncAction } from "../Queries/DeleteTeacher";
+import { DeleteRoomAsyncAction } from "../Queries/DeleteRoom";
 import { useDispatch } from "react-redux";
 import { InstantActionButton } from "../Mutations/Create";
 import { useAsync, useAsyncThunkAction } from "../../../../dynamic/src/Hooks";
@@ -45,10 +49,6 @@ const TopicRow = ({ topic, lessons, planId }) => {
     if (selectedRoom) urlParams += `&roomId=${selectedRoom.id}`;
     if (selectedGroup) urlParams += `&groupId=${selectedGroup.id}`;
 
-    const payload = {
-        planitemId: planId,
-        userId: selectedTeacher?.id
-    };
         
     const { run, loading, error } = useAsync(AddLessonAsyncAction, null, { deferred: true });
     const { run: reloadPlan } = useAsyncThunkAction(FetchMojeDataAction, null, { deferred: true });
@@ -58,7 +58,12 @@ const TopicRow = ({ topic, lessons, planId }) => {
     const { run: assignInstructor, loading: loadingInstructor } = useAsync(AddInstructorAsyncAction, null, { deferred: true });
     const { run: assignFacility, loading: loadingFacility } = useAsync(AddRoomAsyncAction, null, { deferred: true });
     const { run: assignGroup, loading: loadingGroup } = useAsync(AddGroupAsyncAction, null, { deferred: true });
-    
+    const { run: deleteLesson, loading: loadingDeleteLesson } = useAsync(DeleteLessonAsyncAction, null, { deferred: true });
+
+    const { run: deleteVyucujiciho, loading: loadingVyucujiciho } = useAsync(DeleteTeacherAsyncAction, null, { deferred: true });
+    const { run: deleteMistnost, loading: loadingMistnost } = useAsync(DeleteRoomAsyncAction, null, { deferred: true });
+    const { run: deleteSkupinu, loading: loadingSkupinu } = useAsync(DeleteGroupAsyncAction, null, { deferred: true });
+
     useEffect(() => {
         // Pomocí limit: 1000 obejdeme případné stránkování a stáhneme všechny typy
         fetchLessonTypes({ limit: 1000 })
@@ -129,6 +134,80 @@ const TopicRow = ({ topic, lessons, planId }) => {
             console.error("Chyba při ukládání Skupina:", err);
         }
     };
+
+    const fsmazat = async (lesson) => {
+        const insertPayload = {
+            id: lesson.id,
+            lastchange: lesson.lastchange
+        };
+
+        try {
+            // Spuštění mutace přes funkci run
+            const response = await deleteLesson(insertPayload);
+            console.log("Lekce smazana:", response);
+            
+            //setLessonName(""); // Vyčištění pole po úspěchu
+            alert("Lekce smazana.");
+            await reloadPlan({ id: planId, limit: 1000 });
+        } catch (err) {
+            console.error("Chyba při mazani lekce:", err);
+        }
+    };
+
+    const fodebratMistnost = async (lessonId, facilityId) => {
+        const removePayload = {
+            planitemId: lessonId,
+            facilityId: facilityId,
+        };
+
+        try {
+            await deleteMistnost(removePayload);
+            await reloadPlan({ id: planId, limit: 1000 });
+        } catch (err) {
+            console.error("Chyba při odebírání místnosti:", err);
+            alert("Místnost se nepodařilo odebrat.");
+        }
+    };
+
+    const fodebratVyucujiciho = async (lessonId, instructorId) => {
+        const removePayload = {
+            planitemId: lessonId,
+            userId: instructorId,
+        };
+
+        try {
+            await deleteVyucujiciho(removePayload);
+            await reloadPlan({ id: planId, limit: 1000 });
+        } catch (err) {
+            console.error("Chyba při odebírání vyučujícího:", err);
+            alert("Vyučujícího se nepodařilo odebrat.");
+        }
+    };
+
+    const fodebratSkupinu = async (lessonId, groupId) => {
+        
+        // Payload je prakticky stejný jako u přidávání
+        const removePayload = {
+            planitemId: lessonId,
+            groupId: groupId,
+        };
+
+        try {
+            // Zavoláme mutaci pro odebrání (a čekáme, než backend vazbu zruší)
+            const response = await deleteSkupinu(removePayload);
+            console.log("Skupina úspěšně odebrána:", response);
+            
+            // Provedeme měkký reload - křížek zmizí plynule bez bliknutí stránky
+            await reloadPlan({ id: planId, limit: 1000 });
+            
+            // TIP: U mazání malých štítků se většinou 'alert' nedává, 
+            // protože to uživatele zdržuje. Zmizení štítku je dostatečná zpětná vazba.
+        } catch (err) {
+            console.error("Chyba při odebírání skupiny:", err);
+            alert("Skupinu se nepodařilo odebrat. Zkontrolujte konzoli.");
+        }
+    };
+
 
     const handleSave = async () => {
         // Příprava dat pro mutaci podle parametrů v AddLesson.jsx
@@ -242,25 +321,79 @@ const TopicRow = ({ topic, lessons, planId }) => {
                                 <div className="d-flex align-items-center gap-3 ms-3 small text-secondary">
                 
                 {/* Učitelé */}
-                {lesson.instructors && lesson.instructors.length > 0 && (
-        <span title="Vyučující">
-            👤 {lesson.instructors.map(inst => inst.surname || inst.fullname || inst.name || "Neznámý").join(', ')}
-        </span>
-    )}
+    {lesson.instructors && lesson.instructors.length > 0 && (
+    <div className="d-flex flex-wrap align-items-center gap-1" title="Vyučující">
+        <span className="me-1">👤</span>
+        
+        {lesson.instructors.map(inst => (
+            <span 
+                key={inst.id} 
+                className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm"
+            >
+                {inst.fullname || inst.surname || inst.name || "Neznámý"}
+                
+                {/* Malý křížek pro smazání */}
+                <button 
+                    type="button" 
+                    className="btn-close" 
+                    style={{ fontSize: "0.5rem" }} 
+                    aria-label="Smazat"
+                    onClick={() => fodebratVyucujiciho(lesson.id, inst.id)} // <--- ZDE ZAVOLÁTE FUNKCI PRO SMAZÁNÍ
+                ></button>
+            </span>
+        ))}
+    </div>
+)}
 
     {/* Místnosti */}
     {lesson.facilities && lesson.facilities.length > 0 && (
-        <span title="Místnosti">
-            🏫 {lesson.facilities.map(fac => fac.label || fac.name || "Neznámá").join(', ')}
-        </span>
-    )}
+    <div className="d-flex flex-wrap align-items-center gap-1" title="Místnosti">
+        <span className="me-1">🏫</span>
+        
+        {lesson.facilities.map(fac => (
+            <span 
+                key={fac.id} 
+                className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm"
+            >
+                {fac.label || fac.name || "Neznámá"}
+                
+                {/* Malý křížek pro smazání */}
+                <button 
+                    type="button" 
+                    className="btn-close" 
+                    style={{ fontSize: "0.5rem" }} 
+                    aria-label="Smazat"
+                    onClick={() => fodebratMistnost(lesson.id, fac.id)}
+                ></button>
+            </span>
+        ))}
+    </div>
+)}
 
     {/* Skupiny (Opraveno na studyGroups) */}
     {lesson.studyGroups && lesson.studyGroups.length > 0 && (
-        <span title="Skupiny">
-            👥 {lesson.studyGroups.map(grp => grp.abbreviation || grp.name || "Neznámá").join(', ')}
-        </span>
-    )}
+    <div className="d-flex flex-wrap align-items-center gap-1 ms-2" title="Skupiny">
+        <span className="me-1">👥</span>
+        
+        {lesson.studyGroups.map(grp => (
+            <span 
+                key={grp.id} 
+                className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm"
+            >
+                {grp.abbreviation || grp.name || "Neznámá"}
+                
+                {/* Malý křížek pro smazání */}
+                <button 
+                    type="button" 
+                    className="btn-close" 
+                    style={{ fontSize: "0.5rem" }} 
+                    aria-label="Smazat"
+                    onClick={() => fodebratSkupinu(lesson.id, grp.id)}
+                ></button>
+            </span>
+        ))}
+    </div>
+)}
 
             </div>
                                 <div className="ms-auto d-flex gap-2">
@@ -283,6 +416,11 @@ const TopicRow = ({ topic, lessons, planId }) => {
                                         disabled={!selectedGroup || loadingGroup}
                                         onClick={() => fskupina(lesson)}>
                                         {loadingGroup ? "..." : `👥 ${selectedGroup?.abbreviation || "Skupina"}`}
+                                    </button>
+                                    <button
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() => fsmazat(lesson)}>
+                                        {"Smazat"}
                                     </button>
                                 </div>
                             </div>
