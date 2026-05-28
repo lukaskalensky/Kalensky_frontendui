@@ -1,5 +1,24 @@
 # Změny
 
+## 28.5.2026 — zobraz_plan_lekcí_téma
+
+- badge u tématu teď ukazuje `8/10 přednáška` místo `11x přednáška`
+- query rozšířena o `topic.lessons { count type }` z `LessonGQLModel`
+
+## 27.5.2026 — mazání a přiřazování (app_studyplan)
+
+- nové GQL akce `DeleteLesson`, `DeleteGroup`, `DeleteRoom`, `DeleteTeacher`
+- tlačítko Smazat u každé lekce, křížky pro odebrání učitele / místnosti / skupiny
+- `AddGroup`, `AddRoom` — přiřazení skupiny a místnosti k lekci
+- načítání typů výuky přes `LessonType.jsx` (`lessonTypePage`)
+
+## 12.–13.5.2026 — přidávání lekcí a layout
+
+- `SelectionContext` pro sdílení vybraného učitele, místnosti a skupiny
+- `AddLesson`, `AddInstructor` — vytváření lekce a přiřazení učitele
+- přepis `StudyPlanDetail.jsx` — vstupy a tlačítko Uložit lekci v hlavičce tématu
+- publish workflow aktualizován
+
 ## 12.5.2026 — vizualizace (app_studyplan)
 
 - navbar s dropdowny Programy / Studenti / Požadavky, napojené na granting2 routy
