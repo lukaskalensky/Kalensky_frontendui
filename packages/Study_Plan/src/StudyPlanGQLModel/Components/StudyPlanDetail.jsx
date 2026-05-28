@@ -35,14 +35,29 @@ const TopicRow = ({ topic, lessons, planId }) => {
     const [lessonTypes, setLessonTypes] = useState([]);
     const [selectedLessonTypeId, setSelectedLessonTypeId] = useState("");
     
-    // Spočítáme počty typů výuky pro pravou stranu hlavičky
-    const lessonsByType = (lessons || []).reduce((acc, l) => {
+    // Skutečný počet vytvořených lekcí per typ
+    const actualByTypeName = (lessons || []).reduce((acc, l) => {
         const typeName = l.lessontype?.name || l.lessontype?.nameEn || null;
         if (!typeName) return acc;
         acc[typeName] = (acc[typeName] || 0) + 1;
         return acc;
     }, {});
-    const typeEntries = Object.entries(lessonsByType);
+
+    // Plánovaný počet lekcí per typ z topic.lessons (LessonGQLModel.count)
+    const plannedByTypeName = (topic?.lessons || []).reduce((acc, l) => {
+        const typeName = l.type?.name || l.type?.nameEn || null;
+        if (!typeName) return acc;
+        acc[typeName] = l.count || 0;
+        return acc;
+    }, {});
+
+    // Spojení obou zdrojů — zobrazíme všechny známé typy
+    const allTypeNames = new Set([...Object.keys(actualByTypeName), ...Object.keys(plannedByTypeName)]);
+    const typeEntries = [...allTypeNames].map(typeName => ({
+        typeName,
+        actual: actualByTypeName[typeName] || 0,
+        planned: plannedByTypeName[typeName] ?? null,
+    }));
 
     let urlParams = `?topicId=${topic.id}&planId=${planId || ""}`;
     if (selectedTeacher) urlParams += `&teacherId=${selectedTeacher.id}`;
@@ -251,11 +266,11 @@ const TopicRow = ({ topic, lessons, planId }) => {
                         {topic.name || topic.nameEn || `Téma ${topic.order ?? ""}`}
                     </ProxyLink>
                     
-                    {/* Bubliny se souhrnem typu výuky (např. 2 x přednáška) */}
+                    {/* Bubliny se souhrnem typu výuky (např. 8/10 přednáška) */}
                     <div className="d-flex gap-2 ms-2">
-                        {typeEntries.map(([type, count]) => (
-                            <span key={type} className="badge bg-white text-secondary border border-secondary border-opacity-25 fw-normal">
-                                {count}x {type}
+                        {typeEntries.map(({ typeName, actual, planned }) => (
+                            <span key={typeName} className="badge bg-white text-secondary border border-secondary border-opacity-25 fw-normal">
+                                {planned !== null ? `${actual}/${planned}` : `${actual}x`} {typeName}
                             </span>
                         ))}
                     </div>

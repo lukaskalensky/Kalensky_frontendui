@@ -28,6 +28,18 @@ fragment Topic on TopicGQLModel {
   name
   nameEn
   order
+  lessons {
+    __typename
+    id
+    count
+    typeId
+    type {
+      __typename
+      id
+      name
+      nameEn
+    }
+  }
 }
 
 fragment Semester on SemesterGQLModel {
