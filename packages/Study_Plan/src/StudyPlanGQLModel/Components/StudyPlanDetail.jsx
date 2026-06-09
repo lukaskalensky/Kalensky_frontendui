@@ -8,6 +8,8 @@ import { useAsync, useAsyncThunkAction } from "../../../../dynamic/src/Hooks";
 import { AsyncStateIndicator } from "../../../../_template/src/Base";
 
 // Importy akcí
+import { CreateButton } from '../Mutations/Create';
+import { DeleteButton } from '../Mutations/Delete';
 import { AddInstructorAsyncAction } from "../Queries/AddInstructor";
 import { AddRoomAsyncAction } from "../Queries/AddRoom";
 import { AddGroupAsyncAction } from "../Queries/AddGroup";
@@ -93,6 +95,22 @@ const InfoPanel = ({ item }) => {
                         {item?.lastchange && <> @ {formatDateTime(item.lastchange)}</>}
                     </span>
                 </InfoRow>
+            </div>
+
+            <div className="mt-3 d-flex flex-column gap-2">
+                <CreateButton
+                    className="btn btn-sm btn-outline-success w-100"
+                    rbacitem={item}
+                    item={{ semesterId: item?.semesterId }}
+                >
+                    Vytvořit nový plán
+                </CreateButton>
+                <DeleteButton
+                    className="btn btn-sm btn-outline-danger w-100"
+                    item={item}
+                >
+                    Smazat plán
+                </DeleteButton>
             </div>
         </div>
     )
