@@ -38,6 +38,41 @@ const InfoRow = ({ label, children }) => (
     </div>
 )
 
+// ── 2a. SEZNAM PŘEDVÍDANÝCH VYUČUJÍCÍCH ──
+const ExpectedTeachers = ({ lessons }) => {
+    const teacherMap = {};
+    (lessons || []).forEach(lesson => {
+        (lesson.instructors || []).forEach(inst => {
+            if (!teacherMap[inst.id]) {
+                teacherMap[inst.id] = { ...inst, lessonCount: 0 };
+            }
+            teacherMap[inst.id].lessonCount += 1;
+        });
+    });
+
+    const teachers = Object.values(teacherMap);
+
+    return (
+        <div className="mt-3 p-2 rounded border border-primary border-opacity-25 bg-primary bg-opacity-10">
+            <div className="fw-semibold small mb-2">👥 Předvídaní vyučující ({teachers.length})</div>
+            {teachers.length === 0 ? (
+                <div className="text-muted fst-italic small">Zatím nepřiřazeni</div>
+            ) : (
+                <div className="d-flex flex-column gap-1">
+                    {teachers.map(teacher => (
+                        <div key={teacher.id} className="d-flex justify-content-between align-items-center small">
+                            <Link item={teacher}>
+                                {teacher.fullname || teacher.surname || "Neznámý"}
+                            </Link>
+                            <span className="badge bg-primary rounded-pill ms-1">{teacher.lessonCount}x</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 // ── 2. INFO PANEL (LEVÁ ČÁST DETAILU PLÁNU) ──
 const InfoPanel = ({ item }) => {
     const semester = item?.semester
@@ -96,6 +131,8 @@ const InfoPanel = ({ item }) => {
                     </span>
                 </InfoRow>
             </div>
+
+            <ExpectedTeachers lessons={item?.lessons} />
 
             <div className="mt-3 d-flex flex-column gap-2">
                 <CreateButton
