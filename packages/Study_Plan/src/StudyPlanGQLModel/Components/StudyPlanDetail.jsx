@@ -284,6 +284,35 @@ const AddLessonForm = ({ topicId, planId }) => {
     )
 }
 
+// ── 5a. POTVRZOVACÍ DIALOG (PREVENCE MISS-CLICK) ──
+const ConfirmModal = ({ show, message, onConfirm, onCancel }) => {
+    if (!show) return null;
+    return (
+        <div
+            className="modal d-block"
+            style={{ backgroundColor: "rgba(0,0,0,0.4)", zIndex: 1050 }}
+            tabIndex="-1"
+            onClick={onCancel}
+        >
+            <div className="modal-dialog modal-dialog-centered modal-sm" onClick={e => e.stopPropagation()}>
+                <div className="modal-content shadow">
+                    <div className="modal-header py-2 border-0">
+                        <h6 className="modal-title text-danger">⚠ Potvrzení</h6>
+                        <button type="button" className="btn-close btn-sm" onClick={onCancel} />
+                    </div>
+                    <div className="modal-body py-2">
+                        <p className="mb-0 small">{message}</p>
+                    </div>
+                    <div className="modal-footer py-2 border-0 gap-2">
+                        <button className="btn btn-sm btn-danger" onClick={onConfirm}>Ano, smazat</button>
+                        <button className="btn btn-sm btn-outline-secondary" onClick={onCancel}>Zrušit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ── 5. ŘÁDEK JEDNÉ LEKCE (S AKCEMI PRO CONFIG) ──
 
 
@@ -298,10 +327,16 @@ const LessonRow = ({ lesson, planId }) => {
     const { run: assignFacility, loading: loadingFacility } = useAsync(AddRoomAsyncAction, null, { deferred: true });
     const { run: assignGroup, loading: loadingGroup } = useAsync(AddGroupAsyncAction, null, { deferred: true });
     const { run: deleteLesson } = useAsync(DeleteLessonAsyncAction, null, { deferred: true });
-    
+
     const { run: deleteVyucujiciho } = useAsync(DeleteTeacherAsyncAction, null, { deferred: true });
     const { run: deleteMistnost } = useAsync(DeleteRoomAsyncAction, null, { deferred: true });
     const { run: deleteSkupinu } = useAsync(DeleteGroupAsyncAction, null, { deferred: true });
+
+    // ── POTVRZOVACÍ STAV ──
+    const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+    const withConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+    const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
+    const handleConfirm = async () => { closeConfirm(); if (confirmState.onConfirm) await confirmState.onConfirm(); };
 
     // ── AKCE: PŘIDÁNÍ UČITELE ──
     const fvyucujici = async () => {
@@ -376,6 +411,13 @@ const LessonRow = ({ lesson, planId }) => {
     };
 
     return (
+        <>
+        <ConfirmModal
+            show={confirmState.show}
+            message={confirmState.message}
+            onConfirm={handleConfirm}
+            onCancel={closeConfirm}
+        />
         <div className="d-flex align-items-center gap-2 py-1 px-3 rounded" style={{ backgroundColor: "rgba(255,255,255,0.4)" }}>
             <span className="fw-medium text-dark">{lesson.name || "Bez názvu"}</span>
             
@@ -390,14 +432,16 @@ const LessonRow = ({ lesson, planId }) => {
             {lesson.instructors?.map(inst => (
                 <span key={inst.id} className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm">
                     👤 {inst.fullname || inst.surname || "Neznámý"}
-                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }} 
-                        onClick={async () => {
-                            try {
-                                await deleteVyucujiciho({ planitemId: lesson.id, userId: inst.id });
-                                // Lokální odstranění z Redux storu
-                                dispatch(removeInstructorLocal({ lessonId: lesson.id, teacherId: inst.id }));
-                            } catch (e) { console.error(e); }
-                        }} 
+                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }}
+                        onClick={() => withConfirm(
+                            `Odebrat vyučujícího ${inst.fullname || inst.surname || "Neznámý"}?`,
+                            async () => {
+                                try {
+                                    await deleteVyucujiciho({ planitemId: lesson.id, userId: inst.id });
+                                    dispatch(removeInstructorLocal({ lessonId: lesson.id, teacherId: inst.id }));
+                                } catch (e) { console.error(e); }
+                            }
+                        )}
                     />
                 </span>
             ))}
@@ -406,14 +450,16 @@ const LessonRow = ({ lesson, planId }) => {
             {lesson.facilities?.map(fac => (
                 <span key={fac.id} className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm">
                     🏫 {fac.label || fac.name || "Neznámá"}
-                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }} 
-                        onClick={async () => {
-                            try {
-                                await deleteMistnost({ planitemId: lesson.id, facilityId: fac.id });
-                                // Lokální odstranění z Redux storu
-                                dispatch(removeFacilityLocal({ lessonId: lesson.id, facilityId: fac.id }));
-                            } catch (e) { console.error(e); }
-                        }} 
+                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }}
+                        onClick={() => withConfirm(
+                            `Odebrat místnost ${fac.label || fac.name || "Neznámá"}?`,
+                            async () => {
+                                try {
+                                    await deleteMistnost({ planitemId: lesson.id, facilityId: fac.id });
+                                    dispatch(removeFacilityLocal({ lessonId: lesson.id, facilityId: fac.id }));
+                                } catch (e) { console.error(e); }
+                            }
+                        )}
                     />
                 </span>
             ))}
@@ -422,14 +468,16 @@ const LessonRow = ({ lesson, planId }) => {
             {lesson.studyGroups?.map(grp => (
                 <span key={grp.id} className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm">
                     👥 {grp.abbreviation || grp.name || "Neznámá"}
-                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }} 
-                        onClick={async () => {
-                            try {
-                                await deleteSkupinu({ planitemId: lesson.id, groupId: grp.id });
-                                // Lokální odstranění z Redux storu
-                                dispatch(removeGroupLocal({ lessonId: lesson.id, groupId: grp.id }));
-                            } catch (e) { console.error(e); }
-                        }} 
+                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }}
+                        onClick={() => withConfirm(
+                            `Odebrat skupinu ${grp.abbreviation || grp.name || "Neznámá"}?`,
+                            async () => {
+                                try {
+                                    await deleteSkupinu({ planitemId: lesson.id, groupId: grp.id });
+                                    dispatch(removeGroupLocal({ lessonId: lesson.id, groupId: grp.id }));
+                                } catch (e) { console.error(e); }
+                            }
+                        )}
                     />
                 </span>
             ))}
@@ -445,9 +493,15 @@ const LessonRow = ({ lesson, planId }) => {
                 <button className="btn btn-sm btn-outline-warning text-dark" disabled={!selectedGroup || loadingGroup} onClick={fskupina}>
                     {loadingGroup ? "..." : `👥 ${selectedGroup?.abbreviation || "Skupina"}`}
                 </button>
-                <button className="btn btn-sm btn-outline-danger" onClick={fsmazat}>Smazat</button>
+                <button className="btn btn-sm btn-outline-danger"
+                    onClick={() => withConfirm(
+                        `Opravdu smazat lekci "${lesson.name || "Bez názvu"}"?`,
+                        fsmazat
+                    )}
+                >Smazat</button>
             </div>
         </div>
+        </>
     );
 };
 
