@@ -1,5 +1,36 @@
 # Změny
 
+*Aktualizováno: 11.6.2026*
+
+## 10.6.2026 — prevence_miss_click_potvrzovaci_dialogy
+
+- nová komponenta `ConfirmModal` (Bootstrap modal bez externí závislosti)
+- `LessonRow`: 4 destruktivní akce obaleny potvrzovacím dialogem — smazat lekci, odebrat vyučujícího, místnost, skupinu
+- klik mimo modal nebo tlačítko Zrušit zavře dialog bez akce
+
+## 10.6.2026 — seznam_predvidanych_ucitelu
+
+- `StudyPlanDetail`: přidána komponenta `ExpectedTeachers` do InfoPanel
+- agreguje všechny unikátní učitele z lekcí studijního plánu
+- zobrazuje jméno učitele a počet lekcí, které učí (badge)
+- při žádných učitelích zobrazí „Zatím nepřiřazeni"
+
+## 9.6.2026 — vytvoreni_a_smazani_studijniho_planu
+
+- `InsertAsyncAction`: opravena mutace `roleTypeInsert` → `studyPlanInsert` (semesterId, examId)
+- `DeleteAsyncAction`: opravena mutace `roleTypeDelete` → `studyPlanDelete`
+- `StudyPlanDetail`: přidána tlačítka Vytvořit nový plán a Smazat plán do InfoPanel
+- `MediumEditableContent`: formulář zobrazuje `semesterId` a `examId` místo `name/nameEn`
+
+## 9.6.2026 — hlasi_to_chybu
+
+- refaktoring `StudyPlanDetail.jsx`
+- nový `StudyPlanSlice.jsx` se stavovými akcemi pro studijní plán
+
+## 1.6.2026 — publikace
+
+- aktualizace verze `app_studyplan`, oprava `package-lock.json`
+
 ## 28.5.2026 — zobraz_plan_lekcí_téma
 
 - badge u tématu teď ukazuje `8/10 přednáška` místo `11x přednáška`
