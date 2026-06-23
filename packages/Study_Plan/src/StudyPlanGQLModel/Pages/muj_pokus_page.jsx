@@ -7,12 +7,30 @@ import { SelectionContext } from "../Components/SelectionContext";
 import { useState } from "react";
 
 const MujPokusQueryStr = `
+# 1. Základní fragmenty (Doplněné o potřebná data pro UI i Backend)
 fragment User on UserGQLModel {
   __typename
   id
-  fullname
+  lastchange
+  created
+  createdbyId
+  changedbyId
+  rbacobjectId
   name
+  givenname
+  middlename
   email
+  firstname
+  surname
+  valid
+  fullname
+}
+
+fragment RBACObject on RBACObjectGQLModel {
+  __typename
+  id
+  roles { id }
+  currentUserRoles { id }
 }
 
 fragment Subject on SubjectGQLModel {
@@ -42,10 +60,49 @@ fragment Topic on TopicGQLModel {
   }
 }
 
+fragment LessonType on LessonTypeGQLModel {
+  __typename
+  id
+  name
+  nameEn
+}
+
+fragment Exam on ExamGQLModel {
+  __typename
+  id
+  lastchange
+  created
+  name
+  nameEn
+  description
+  descriptionEn
+  minScore
+  maxScore
+}
+
+fragment Event on EventGQLModel {
+  __typename
+  id
+  lastchange
+  created
+  name
+  nameEn
+  description
+  startdate
+  enddate
+  valid
+  place
+}
+
+# 2. Komplexní fragmenty (Spojené relace)
 fragment Semester on SemesterGQLModel {
   __typename
   id
+  lastchange
+  created
   order
+  mandatory
+  credits
   subjectId
   subject {
     ...Subject
@@ -55,63 +112,65 @@ fragment Semester on SemesterGQLModel {
   }
 }
 
-fragment LessonType on LessonTypeGQLModel {
-  __typename
-  id
-  name
-  nameEn
-}
-
 fragment StudyPlanLesson on StudyPlanLessonGQLModel {
   __typename
   id
+  lastchange
+  created
   order
   name
+  nameEn
+  length
+  eventId
   topicId
-  lastchange
   topic {
     __typename
     id
     name
+    nameEn
   }
   lessontypeId
   lessontype {
     ...LessonType
   }
+  # Oproti dlouhému dotazu zde netaháme jen ID, ale jména pro UI
   instructors {
     __typename
     id
     fullname
+    surname
   }
   studyGroups {
     __typename
     id
     name
+    abbreviation
   }
   facilities {
     __typename
     id
     name
+    label
   }
 }
 
-fragment Exam on ExamGQLModel {
-  __typename
-  id
-  name
-  nameEn
-}
-
+# 3. Hlavní fragment plánu
 fragment StudyPlan on StudyPlanGQLModel {
   __typename
   id
   lastchange
   created
+  createdbyId
+  changedbyId
+  rbacobjectId
   createdby {
     ...User
   }
   changedby {
     ...User
+  }
+  rbacobject {
+    ...RBACObject
   }
   semesterId
   semester {
@@ -121,11 +180,17 @@ fragment StudyPlan on StudyPlanGQLModel {
   exam {
     ...Exam
   }
+  eventId
+  event {
+    ...Event
+  }
+  # Zásadní: Používáme limit 1000 pro jistotu, že se načtou všechny lekce
   lessons(limit: 1000) {
     ...StudyPlanLesson
   }
 }
 
+# 4. Samotný Query dotaz
 query studyPlanById($id: UUID!) {
   studyPlanById(id: $id) {
     ...StudyPlan

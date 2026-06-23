@@ -98,8 +98,11 @@ const InfoPanel = ({ item }) => {
             </InfoRow>
 
             <InfoRow label="Období">
-                <Link item={semester}>
-                    <span className="text-muted fst-italic">Missing</span>
+                <Link item={item?.eventId}>
+                    {item?.eventId
+                        ? <>{item?.eventId}</>
+                        : <span className="text-muted fst-italic">Missing</span>
+                    }
                 </Link>
             </InfoRow>
 
@@ -137,7 +140,8 @@ const InfoPanel = ({ item }) => {
                 <CreateButton
                     className="btn btn-sm btn-outline-success w-100"
                     rbacitem={item}
-                    item={{ semesterId: item?.semesterId }}
+                    item={{ semesterId: item?.semesterId, 
+                        eventIdId: item?.eventId }}
                 >
                     Vytvořit nový plán
                 </CreateButton>

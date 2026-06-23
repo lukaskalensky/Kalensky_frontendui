@@ -1,5 +1,7 @@
 import { CreateURI, MediumEditableContent, ReadItemURI } from "../Components"
 import { InsertAsyncAction } from "../Queries"
+import { CreateTopicAsyncAction } from "../Queries/CreateTopic"; // Import mutace pro téma
+import { AddLessonAsyncAction } from "../Queries/AddLesson";
 import { 
     CreateBody as BaseCreateBody, 
     CreateButton as BaseCreateButton, 
@@ -7,10 +9,70 @@ import {
     CreateLink  as BaseCreateLink
 } from "../../../../_template/src/Base/Mutations/Create"
 import { useEffect } from 'react';
+import { useAsync } from "../../../../dynamic/src/Hooks";
+import { useState } from 'react';
+
+
+// 1. Definujeme hooky pro jednotlivé operace
+const { run: insertPlan, loading: loadingPlan } = useAsync(InsertAsyncAction, null, { deferred: true });
+const { run: createTopic, loading: loadingTopic } = useAsync(CreateTopicAsyncAction, null, { deferred: true });
+const { run: addLesson, loading: loadingLesson } = useAsync(AddLessonAsyncAction, null, { deferred: true });
+
+const isLoading = loadingPlan || loadingTopic || loadingLesson;
 
 
 const DefaultContent = (props) => <MediumEditableContent {...props} />
-const MutationAsyncAction = InsertAsyncAction
+// Naše chytrá akce, která zpracuje plán i lekce najednou
+const ComplexInsertPlanAction = (item) => async (dispatch, getState) => {
+    // 1. Oddělíme metadata plánu od pole témat
+    const { plannedTopics, ...planData } = item;
+    if (!planData.examId) planData.examId = null;
+
+    try {
+        // 2. Vytvoření plánu
+        console.log("Zakládám studijní plán...");
+        const planResult = await dispatch(InsertAsyncAction(planData));
+        const newPlanId = planResult?.data?.studyPlanInsert?.id || planResult?.id;
+
+        if (!newPlanId) throw new Error("Nepodařilo se založit plán.");
+
+        // 3. Zpracování témat a lekcí
+        // ... uvnitř ComplexInsertPlanAction
+        if (plannedTopics && plannedTopics.length > 0) {
+            for (const topic of plannedTopics) {
+                // Vytvoření tématu
+                const topicResult = await dispatch(CreateTopicAsyncAction({
+                    semesterId: planData.semesterId,
+                    name: topic.name,
+                    order: topic.order || null
+                }));
+                
+                // --- TADY JE NEJČASTĚJŠÍ CHYBA ---
+                // Zkontrolujte, zda je toto ID skutečně UUID a zda je v této cestě.
+                // Někdy bývá v topicResult.data.topicInsert.Entity.id
+                const newTopicId = topicResult?.data?.topicInsert?.id || topicResult?.id;
+                
+                if (newTopicId && topic.lessons) {
+                    for (const lesson of topic.lessons) {
+                        await dispatch(AddLessonAsyncAction({
+                            planId: newPlanId,
+                            topicId: newTopicId, // Zde se teď předává správné ID z DB
+                            lessontypeId: lesson.lessontypeId,
+                            name: lesson.name || "Nová lekce",
+                            length: parseInt(lesson.count, 10) || 1
+                        }));
+                    }
+                }
+            }
+        }
+        return planResult;
+    } catch (error) {
+        console.error("Chyba při komplexním vytvoření:", error);
+        throw error;
+    }
+};
+
+const MutationAsyncAction = ComplexInsertPlanAction;
 
 const permissions = {
     oneOfRoles: ["studijní administrátor"],
