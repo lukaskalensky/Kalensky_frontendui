@@ -21,5 +21,5 @@ fragment InsertError on InsertError {
 }
 `
 
-const InsertMutation = createQueryStrLazy(`${InsertMutationStr}`, LargeFragment)
+const InsertMutation = createQueryStrLazy(`${InsertMutationStr}`)
 export const InsertAsyncAction = createAsyncGraphQLAction2(InsertMutation)

@@ -22,5 +22,5 @@ fragment StudyPlanGQLModelDeleteError on StudyPlanGQLModelDeleteError {
 }
 `
 
-const DeleteMutation = createQueryStrLazy(`${DeleteMutationStr}`, LargeFragment)
+const DeleteMutation = createQueryStrLazy(`${DeleteMutationStr}`)
 export const DeleteAsyncAction = createAsyncGraphQLAction2(DeleteMutation)
