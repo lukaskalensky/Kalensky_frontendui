@@ -21,7 +21,6 @@ import { DeleteTeacherAsyncAction } from "../Queries/DeleteTeacher";
 import { DeleteRoomAsyncAction } from "../Queries/DeleteRoom";
 import { FetchMojeDataAction } from "../Pages/muj_pokus_page";
 
-
 import { 
     addInstructorLocal, removeInstructorLocal,
     addFacilityLocal, removeFacilityLocal,
@@ -204,7 +203,7 @@ const AddLessonForm = ({ topicId, planId }) => {
 
     const { run: addLesson, loading } = useAsync(AddLessonAsyncAction, null, { deferred: true });
     const { run: fetchLessonTypes } = useAsync(ReadLessonAsyncAction, null, { deferred: true });
-    const { run: reloadPlan } = useAsyncThunkAction(FetchMojeDataAction, null, { deferred: true }); // Tip: Pokud implementujete Redux lokální update, toto nahradíte za useDispatch
+    const { run: reloadPlan } = useAsyncThunkAction(FetchMojeDataAction, null, { deferred: true });
 
     useEffect(() => {
         const loadLessonTypes = async () => {
@@ -249,19 +248,17 @@ const AddLessonForm = ({ topicId, planId }) => {
         <div className="d-flex align-items-center gap-3 ms-auto">
             <input
                 type="text"
-                className="form-control form-control-sm"
+                className="form-control form-control-sm w-auto flex-grow-1"
                 placeholder="Zadejte název výuky..."
                 value={lessonName}
                 onChange={(e) => setLessonName(e.target.value)}
-                style={{ minWidth: "180px" }}
             />
             
-            <div className="form-check form-switch mb-0 d-flex align-items-center gap-2">
+            <div className="mb-0">
                 <select 
-                    className="form-select form-select-sm" 
+                    className="form-select form-select-sm w-auto" 
                     value={selectedLessonTypeId}
                     onChange={(e) => setSelectedLessonTypeId(e.target.value)}
-                    style={{ maxWidth: "150px" }}
                 >
                     {lessonTypes.length === 0 && <option value="">Načítám...</option>}
                     {lessonTypes.map((type) => (
@@ -273,10 +270,9 @@ const AddLessonForm = ({ topicId, planId }) => {
             </div>
 
             <button 
-                className="btn btn-outline-secondary btn-sm"
+                className="btn btn-outline-secondary btn-sm w-auto text-nowrap"
                 onClick={handleSave}
                 disabled={loading}
-                style={{ minWidth: "100px" }}
             >
                 {loading ? "Ukládám..." : "Uložit lekci"}
             </button>
@@ -289,8 +285,7 @@ const ConfirmModal = ({ show, message, onConfirm, onCancel }) => {
     if (!show) return null;
     return (
         <div
-            className="modal d-block"
-            style={{ backgroundColor: "rgba(0,0,0,0.4)", zIndex: 1050 }}
+            className="modal d-block bg-dark bg-opacity-50"
             tabIndex="-1"
             onClick={onCancel}
         >
@@ -315,14 +310,11 @@ const ConfirmModal = ({ show, message, onConfirm, onCancel }) => {
 
 // ── 5. ŘÁDEK JEDNÉ LEKCE (S AKCEMI PRO CONFIG) ──
 
-
 const LessonRow = ({ lesson, planId }) => {
     const { selectedTeacher, selectedRoom, selectedGroup } = useContext(SelectionContext);
     
-    // 1. Inicializujeme dispatch (už nepotřebujeme useAsyncThunkAction / reloadPlan!)
     const dispatch = useDispatch();
 
-    // Síťové mutace pro zápis do DB (deferred: true)
     const { run: assignInstructor, loading: loadingInstructor } = useAsync(AddInstructorAsyncAction, null, { deferred: true });
     const { run: assignFacility, loading: loadingFacility } = useAsync(AddRoomAsyncAction, null, { deferred: true });
     const { run: assignGroup, loading: loadingGroup } = useAsync(AddGroupAsyncAction, null, { deferred: true });
@@ -332,49 +324,37 @@ const LessonRow = ({ lesson, planId }) => {
     const { run: deleteMistnost } = useAsync(DeleteRoomAsyncAction, null, { deferred: true });
     const { run: deleteSkupinu } = useAsync(DeleteGroupAsyncAction, null, { deferred: true });
 
-    // ── POTVRZOVACÍ STAV ──
     const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
     const withConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
     const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
     const handleConfirm = async () => { closeConfirm(); if (confirmState.onConfirm) await confirmState.onConfirm(); };
 
-    // ── AKCE: PŘIDÁNÍ UČITELE ──
     const fvyucujici = async () => {
         try {
-            // A) Zápis do DB na serveru
             await assignInstructor({ planitemId: lesson.id, userId: selectedTeacher.id });
-            
-            // B) MÍSTO reloadPlan() provedeme instantní lokální update v Redux storu
             dispatch(addInstructorLocal({ 
                 lessonId: lesson.id, 
-                teacher: selectedTeacher  // objekt učitele, kterého už máme v kontextu
+                teacher: selectedTeacher
             }));
         } catch (err) { 
             console.error("Chyba serveru při přidávání učitele:", err); 
         }
     };
 
-    // ── AKCE: ODEBRÁNÍ UČITELE (Křížek) ──
     const handleRemoveInstructor = async (instructorId) => {
         try {
             await deleteVyucujiciho({ planitemId: lesson.id, userId: instructorId });
-            
-            // Lokální smazání ze storu
             dispatch(removeInstructorLocal({ lessonId: lesson.id, teacherId: instructorId }));
         } catch (err) { console.error(err); }
     };
 
-    // ── AKCE: PŘIDÁNÍ MÍSTNOSTI ──
     const fmistnost = async () => {
         try {
             await assignFacility({ planitemId: lesson.id, facilityId: selectedRoom.id });
-            
-            // Lokální update místnosti
             dispatch(addFacilityLocal({ lessonId: lesson.id, facility: selectedRoom }));
         } catch (err) { console.error(err); }
     };
 
-    // ── AKCE: ODEBRÁNÍ MÍSTNOSTI (Křížek) ──
     const handleRemoveFacility = async (facilityId) => {
         try {
             await deleteMistnost({ planitemId: lesson.id, facilityId: facilityId });
@@ -382,17 +362,13 @@ const LessonRow = ({ lesson, planId }) => {
         } catch (err) { console.error(err); }
     };
 
-    // ── AKCE: PŘIDÁNÍ SKUPINY ──
     const fskupina = async () => {
         try {
             await assignGroup({ planitemId: lesson.id, groupId: selectedGroup.id });
-            
-            // Lokální update skupiny
             dispatch(addGroupLocal({ lessonId: lesson.id, group: selectedGroup }));
         } catch (err) { console.error(err); }
     };
 
-    // ── AKCE: ODEBRÁNÍ SKUPINY (Křížek) ──
     const handleRemoveGroup = async (groupId) => {
         try {
             await deleteSkupinu({ planitemId: lesson.id, groupId: groupId });
@@ -400,12 +376,9 @@ const LessonRow = ({ lesson, planId }) => {
         } catch (err) { console.error(err); }
     };
 
-    // ── AKCE: SMAZÁNÍ CELÉ LEKCE ──
     const fsmazat = async () => {
         try {
             await deleteLesson({ id: lesson.id, lastchange: lesson.lastchange });
-            
-            // Lokální smazání lekce ze seznamu
             dispatch(deleteLessonLocal({ lessonId: lesson.id }));
         } catch (err) { console.error(err); }
     };
@@ -418,7 +391,7 @@ const LessonRow = ({ lesson, planId }) => {
             onConfirm={handleConfirm}
             onCancel={closeConfirm}
         />
-        <div className="d-flex align-items-center gap-2 py-1 px-3 rounded" style={{ backgroundColor: "rgba(255,255,255,0.4)" }}>
+        <div className="d-flex align-items-center gap-2 py-1 px-3 rounded bg-white bg-opacity-50">
             <span className="fw-medium text-dark">{lesson.name || "Bez názvu"}</span>
             
             {lesson.lessontype?.name && (
@@ -432,7 +405,7 @@ const LessonRow = ({ lesson, planId }) => {
             {lesson.instructors?.map(inst => (
                 <span key={inst.id} className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm">
                     👤 {inst.fullname || inst.surname || "Neznámý"}
-                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }}
+                    <button type="button" className="btn-close"
                         onClick={() => withConfirm(
                             `Odebrat vyučujícího ${inst.fullname || inst.surname || "Neznámý"}?`,
                             async () => {
@@ -450,7 +423,7 @@ const LessonRow = ({ lesson, planId }) => {
             {lesson.facilities?.map(fac => (
                 <span key={fac.id} className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm">
                     🏫 {fac.label || fac.name || "Neznámá"}
-                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }}
+                    <button type="button" className="btn-close"
                         onClick={() => withConfirm(
                             `Odebrat místnost ${fac.label || fac.name || "Neznámá"}?`,
                             async () => {
@@ -468,7 +441,7 @@ const LessonRow = ({ lesson, planId }) => {
             {lesson.studyGroups?.map(grp => (
                 <span key={grp.id} className="badge bg-white text-dark border d-flex align-items-center gap-2 px-2 py-1 shadow-sm">
                     👥 {grp.abbreviation || grp.name || "Neznámá"}
-                    <button type="button" className="btn-close" style={{ fontSize: "0.5rem" }}
+                    <button type="button" className="btn-close"
                         onClick={() => withConfirm(
                             `Odebrat skupinu ${grp.abbreviation || grp.name || "Neznámá"}?`,
                             async () => {
