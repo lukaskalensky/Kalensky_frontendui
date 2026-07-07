@@ -201,17 +201,29 @@ query studyPlanById($id: UUID!) {
 const MujPokusQuery = createQueryStrLazy(MujPokusQueryStr);
 export const FetchMojeDataAction = createAsyncGraphQLAction2(MujPokusQuery);
 
+// Přidá entitu do seznamu, pokud tam podle id ještě není
+const addUnique = (setList) => (entity) => {
+    if (!entity) return;
+    setList((prev) => (prev.some((x) => x.id === entity.id) ? prev : [...prev, entity]));
+};
+
+// Odebere entitu ze seznamu podle id
+const removeById = (setList) => (id) => {
+    setList((prev) => prev.filter((x) => x.id !== id));
+};
+
 export const MujPokusPage = () => {
 
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
-    const [selectedRoom, setSelectedRoom] = useState(null);
-    const [selectedGroup, setSelectedGroup] = useState(null);
+    // Místo jedné vybrané entity držíme pole -> umožňuje výběr více učitelů/místností/skupin najednou
+    const [selectedTeachers, setSelectedTeachers] = useState([]);
+    const [selectedRooms, setSelectedRooms] = useState([]);
+    const [selectedGroups, setSelectedGroups] = useState([]);
 
     // Vložíme je do jednoho objektu
     const contextValue = {
-        selectedTeacher, setSelectedTeacher,
-        selectedRoom, setSelectedRoom,
-        selectedGroup, setSelectedGroup
+        selectedTeachers, addTeacher: addUnique(setSelectedTeachers), removeTeacher: removeById(setSelectedTeachers),
+        selectedRooms, addRoom: addUnique(setSelectedRooms), removeRoom: removeById(setSelectedRooms),
+        selectedGroups, addGroup: addUnique(setSelectedGroups), removeGroup: removeById(setSelectedGroups),
     };
 
 

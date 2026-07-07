@@ -318,8 +318,8 @@ const ConfirmModal = ({ show, message, onConfirm, onCancel }) => {
 // ── 5. ŘÁDEK JEDNÉ LEKCE (S AKCEMI PRO CONFIG) ──
 
 const LessonRow = ({ lesson, planId }) => {
-    const { selectedTeacher, selectedRoom, selectedGroup } = useContext(SelectionContext);
-    
+    const { selectedTeachers = [], selectedRooms = [], selectedGroups = [] } = useContext(SelectionContext);
+
     const dispatch = useDispatch();
 
     const { run: assignInstructor, loading: loadingInstructor } = useAsync(AddInstructorAsyncAction, null, { deferred: true });
@@ -336,15 +336,17 @@ const LessonRow = ({ lesson, planId }) => {
     const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
     const handleConfirm = async () => { closeConfirm(); if (confirmState.onConfirm) await confirmState.onConfirm(); };
 
+    // Přidá VŠECHNY vybrané učitele k lekci najednou (přeskočí ty, co už u ní jsou)
     const fvyucujici = async () => {
-        try {
-            await assignInstructor({ planitemId: lesson.id, userId: selectedTeacher.id });
-            dispatch(addInstructorLocal({ 
-                lessonId: lesson.id, 
-                teacher: selectedTeacher
-            }));
-        } catch (err) { 
-            console.error("Chyba serveru při přidávání učitele:", err); 
+        const alreadyIds = new Set((lesson.instructors || []).map(i => i.id));
+        const toAdd = selectedTeachers.filter(t => !alreadyIds.has(t.id));
+        for (const teacher of toAdd) {
+            try {
+                await assignInstructor({ planitemId: lesson.id, userId: teacher.id });
+                dispatch(addInstructorLocal({ lessonId: lesson.id, teacher }));
+            } catch (err) {
+                console.error("Chyba serveru při přidávání učitele:", err);
+            }
         }
     };
 
@@ -355,11 +357,18 @@ const LessonRow = ({ lesson, planId }) => {
         } catch (err) { console.error(err); }
     };
 
+    // Přidá VŠECHNY vybrané místnosti k lekci najednou (přeskočí ty, co už u ní jsou)
     const fmistnost = async () => {
-        try {
-            await assignFacility({ planitemId: lesson.id, facilityId: selectedRoom.id });
-            dispatch(addFacilityLocal({ lessonId: lesson.id, facility: selectedRoom }));
-        } catch (err) { console.error(err); }
+        const alreadyIds = new Set((lesson.facilities || []).map(f => f.id));
+        const toAdd = selectedRooms.filter(r => !alreadyIds.has(r.id));
+        for (const room of toAdd) {
+            try {
+                await assignFacility({ planitemId: lesson.id, facilityId: room.id });
+                dispatch(addFacilityLocal({ lessonId: lesson.id, facility: room }));
+            } catch (err) {
+                console.error(err);
+            }
+        }
     };
 
     const handleRemoveFacility = async (facilityId) => {
@@ -369,11 +378,18 @@ const LessonRow = ({ lesson, planId }) => {
         } catch (err) { console.error(err); }
     };
 
+    // Přidá VŠECHNY vybrané skupiny k lekci najednou (přeskočí ty, co už u ní jsou)
     const fskupina = async () => {
-        try {
-            await assignGroup({ planitemId: lesson.id, groupId: selectedGroup.id });
-            dispatch(addGroupLocal({ lessonId: lesson.id, group: selectedGroup }));
-        } catch (err) { console.error(err); }
+        const alreadyIds = new Set((lesson.studyGroups || []).map(g => g.id));
+        const toAdd = selectedGroups.filter(g => !alreadyIds.has(g.id));
+        for (const group of toAdd) {
+            try {
+                await assignGroup({ planitemId: lesson.id, groupId: group.id });
+                dispatch(addGroupLocal({ lessonId: lesson.id, group }));
+            } catch (err) {
+                console.error(err);
+            }
+        }
     };
 
     const handleRemoveGroup = async (groupId) => {
@@ -464,14 +480,14 @@ const LessonRow = ({ lesson, planId }) => {
         </div>
             {/* Ovládací tlačítka akcí */}
             <div className="ms-auto d-flex gap-2">
-                <button className="btn btn-sm btn-outline-primary" disabled={!selectedTeacher || loadingInstructor} onClick={fvyucujici}>
-                    {loadingInstructor ? "..." : `👤 ${selectedTeacher?.surname || "Učitel"}`}
+                <button className="btn btn-sm btn-outline-primary" disabled={selectedTeachers.length === 0 || loadingInstructor} onClick={fvyucujici}>
+                    {loadingInstructor ? "..." : `👤 Přidat učitele${selectedTeachers.length ? ` (${selectedTeachers.length})` : ""}`}
                 </button>
-                <button className="btn btn-sm btn-outline-success" disabled={!selectedRoom || loadingFacility} onClick={fmistnost}>
-                    {loadingFacility ? "..." : `🏫 ${selectedRoom?.label || "Místnost"}`}
+                <button className="btn btn-sm btn-outline-success" disabled={selectedRooms.length === 0 || loadingFacility} onClick={fmistnost}>
+                    {loadingFacility ? "..." : `🏫 Přidat místnosti${selectedRooms.length ? ` (${selectedRooms.length})` : ""}`}
                 </button>
-                <button className="btn btn-sm btn-outline-warning text-dark" disabled={!selectedGroup || loadingGroup} onClick={fskupina}>
-                    {loadingGroup ? "..." : `👥 ${selectedGroup?.abbreviation || "Skupina"}`}
+                <button className="btn btn-sm btn-outline-warning text-dark" disabled={selectedGroups.length === 0 || loadingGroup} onClick={fskupina}>
+                    {loadingGroup ? "..." : `👥 Přidat skupiny${selectedGroups.length ? ` (${selectedGroups.length})` : ""}`}
                 </button>
                 <button className="btn btn-sm btn-outline-danger"
                     onClick={() => withConfirm(
