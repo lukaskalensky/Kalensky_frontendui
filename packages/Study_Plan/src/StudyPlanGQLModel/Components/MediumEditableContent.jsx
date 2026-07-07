@@ -102,10 +102,26 @@ export const MediumEditableContent = ({ item, onChange = (e) => null, onBlur = (
                     <h6 className="card-title text-secondary border-bottom pb-2 mb-3">🔗 Základní vazby</h6>
                     <div className="row g-3">
                         <div className="col-12 col-md-6">
-                            <Input id={"semesterId"} label={"ID Semestru (UUID)"} className="form-control bg-white" value={item?.semesterId || ""} onChange={onChange} onBlur={onBlur} />
+                            <Input 
+                                id={"semesterId"} 
+                                name={"semesterId"} // <--- PŘIDÁNO
+                                label={"ID Semestru (UUID)"} 
+                                className="form-control bg-white" 
+                                value={item?.semesterId || ""} 
+                                onChange={onChange} 
+                                onBlur={onBlur} 
+                            />
                         </div>
                         <div className="col-12 col-md-6">
-                            <Input id={"eventId"} label={"ID Události / Event (UUID)"} className="form-control bg-white" value={item?.eventId || ""} onChange={onChange} onBlur={onBlur} />
+                            <Input 
+                                id={"eventId"} 
+                                name={"eventId"} // <--- PŘIDÁNO
+                                label={"ID Události / Event (UUID)"} 
+                                className="form-control bg-white" 
+                                value={item?.eventId || ""} 
+                                onChange={onChange} 
+                                onBlur={onBlur} 
+                            />
                         </div>
                     </div>
                 </div>

@@ -1,302 +1,114 @@
 import { CreateURI, MediumEditableContent, ReadItemURI } from "../Components"
-import { InsertAsyncAction } from "../Queries"
-import { CreateTopicAsyncAction } from "../Queries/CreateTopic"; // Import mutace pro téma
-import { AddLessonAsyncAction } from "../Queries/AddLesson";
+import { InsertAsyncAction } from "../Queries/InsertAsyncAction"
+import { CreateTopicAsyncAction } from "../Queries/CreateTopic"; 
+import { AddLessonAsyncAction } from "../Queries/AddLesson"; 
+
 import { 
     CreateBody as BaseCreateBody, 
     CreateButton as BaseCreateButton, 
     CreateDialog as BaseCreateDialog, 
     CreateLink  as BaseCreateLink
 } from "../../../../_template/src/Base/Mutations/Create"
-import { useEffect } from 'react';
 import { useAsync } from "../../../../dynamic/src/Hooks";
-import { useState } from 'react';
-
-
-// 1. Definujeme hooky pro jednotlivé operace
-const { run: insertPlan, loading: loadingPlan } = useAsync(InsertAsyncAction, null, { deferred: true });
-const { run: createTopic, loading: loadingTopic } = useAsync(CreateTopicAsyncAction, null, { deferred: true });
-const { run: addLesson, loading: loadingLesson } = useAsync(AddLessonAsyncAction, null, { deferred: true });
-
-const isLoading = loadingPlan || loadingTopic || loadingLesson;
-
-
-const DefaultContent = (props) => <MediumEditableContent {...props} />
-// Naše chytrá akce, která zpracuje plán i lekce najednou
-const ComplexInsertPlanAction = (item) => async (dispatch, getState) => {
-    // 1. Oddělíme metadata plánu od pole témat
-    const { plannedTopics, ...planData } = item;
-    if (!planData.examId) planData.examId = null;
-
-    try {
-        // 2. Vytvoření plánu
-        console.log("Zakládám studijní plán...");
-        const planResult = await dispatch(InsertAsyncAction(planData));
-        const newPlanId = planResult?.data?.studyPlanInsert?.id || planResult?.id;
-
-        if (!newPlanId) throw new Error("Nepodařilo se založit plán.");
-
-        // 3. Zpracování témat a lekcí
-        // ... uvnitř ComplexInsertPlanAction
-        if (plannedTopics && plannedTopics.length > 0) {
-            for (const topic of plannedTopics) {
-                // Vytvoření tématu
-                const topicResult = await dispatch(CreateTopicAsyncAction({
-                    semesterId: planData.semesterId,
-                    name: topic.name,
-                    order: topic.order || null
-                }));
-                
-                // --- TADY JE NEJČASTĚJŠÍ CHYBA ---
-                // Zkontrolujte, zda je toto ID skutečně UUID a zda je v této cestě.
-                // Někdy bývá v topicResult.data.topicInsert.Entity.id
-                const newTopicId = topicResult?.data?.topicInsert?.id || topicResult?.id;
-                
-                if (newTopicId && topic.lessons) {
-                    for (const lesson of topic.lessons) {
-                        await dispatch(AddLessonAsyncAction({
-                            planId: newPlanId,
-                            topicId: newTopicId, // Zde se teď předává správné ID z DB
-                            lessontypeId: lesson.lessontypeId,
-                            name: lesson.name || "Nová lekce",
-                            length: parseInt(lesson.count, 10) || 1
-                        }));
-                    }
-                }
-            }
-        }
-        return planResult;
-    } catch (error) {
-        console.error("Chyba při komplexním vytvoření:", error);
-        throw error;
-    }
-};
-
-const MutationAsyncAction = ComplexInsertPlanAction;
 
 const permissions = {
     oneOfRoles: ["studijní administrátor"],
     mode: "absolute",
 }
 
-const defaultitem = { name: "Nový" };
+const CustomCreateDialog = (props) => {
+    const { run: insertPlan, loading: loadingPlan } = useAsync(InsertAsyncAction, null, { deferred: true });
+    const { run: createTopic, loading: loadingTopic } = useAsync(CreateTopicAsyncAction, null, { deferred: true });
+    const { run: addStudyPlanLesson, loading: loadingLesson } = useAsync(AddLessonAsyncAction, null, { deferred: true });
 
-/**
- * Wrapper nad `BaseCreateLink` (alias importu `CreateLink` z Base/Mutations/Create),
- * který je odvozený z obecných `General*` komponent.
- *
- * Účel wrapperu:
- * - nastaví výchozí `uriPattern` pro create route
- * - aplikuje výchozí RBAC nastavení přes `permissions` (např. `oneOfRoles`, `mode`)
- * - všechny ostatní props pouze přeposílá do Base komponenty
- * 
- * Vizuálně vyrenderuje link pro kliknutí
- *
- * @param {Object} params
- * @param {string} [params.uriPattern=CreateURI]
- *   Cílová URI/pattern pro link na create stránku nebo create akci (dle routování aplikace).
- *
- * @param {Object} params.props
- *   Další props přeposílané do `BaseCreateLink` (např. `children`, `className`,
- *   `preserveSearch`, `preserveHash`, atd.).
- *
- * @returns {JSX.Element} Vykreslí `BaseCreateLink` s přednastaveným `uriPattern` a RBAC oprávněními.
- */
-export const CreateLink = ({
-    uriPattern=CreateURI,
-    ...props
-}) => (
-    <BaseCreateLink {...props} uriPattern={uriPattern} {...permissions} />
-);
+    const isLoading = loadingPlan || loadingTopic || loadingLesson;
 
-/**
- * Wrapper nad `BaseCreateButton` (alias importu `CreateButton` z Base/Mutations/Create),
- * který je odvozený z obecných `General*` komponent.
- *
- * Účel wrapperu:
- * - nastaví výchozí oprávnění (RBAC) přes `permissions` (`oneOfRoles`, `mode`)
- * - nastaví výchozí mutaci pro vytvoření entity (`mutationAsyncAction`)
- * - umožní vyměnit dialog a obsah formuláře (`CreateDialog`, `DefaultContent`)
- * - určí kam se má po úspěšném vytvoření navigovat (`readItemURI`)
- * - předá výchozí `item` pro nový záznam
- *
- * Zobrazí tlačítko a po jeho stisku otevře dialog, při volbě OK dochází k odeslání mutace na backend
- *
- * @param {Object} params
- * @param {Function} [params.mutationAsyncAction=MutationAsyncAction]
- *   Async action (thunk) pro vytvoření entity (např. InsertAsyncAction). Používá ho Base/General logika.
- *
- * @param {React.ComponentType<Object>} [params.CreateDialog=CreateDialog]
- *   Komponenta dialogu použitá pro vytvoření (renderuje formulář a volá `onOk(draft)` / `onCancel()`).
- *
- * @param {React.ComponentType<Object>} [params.DefaultContent=DefaultContent]
- *   Komponenta, která vykreslí editable obsah formuláře (typicky MediumEditableContent).
- *
- * @param {string} [params.readItemURI=ReadItemURI]
- *   URI pattern pro navigaci na detail nově vytvořené entity (obvykle obsahuje `:id`).
- *
- * @param {Object} [params.rbacitem]
- *   RBAC item pro PermissionGate/Permission check (pokud se liší od entity, která se vytváří).
- *
- * @param {Object} [params.item=defaultitem]
- *   Výchozí objekt (draft) pro nový záznam. Posílá se do dialogu jako `item`.
- *
- * @param {Object} params.props
- *   Všechny další props jsou přeposlány přímo do `BaseCreateButton`
- *   (typicky `children`, `className`, `disabled`, `title`, atd.).
- *
- * @returns {JSX.Element} Vykreslí `BaseCreateButton` s přednastavenými defaulty a RBAC oprávněními.
- */
-const AutoSubmitDialog = (props) => {
-    // Tohle nám ukáže, jestli se komponenta vůbec vykreslila do DOMu
-    console.log("Falešný dialog inicializován. Props:", props);
+    const handleOk = async (item) => {
+        try {
+            const studyPlanVariables = {
+                semesterId: item.semesterId,
+                eventId: item.eventId,
+                examId: null
+            };
 
-    useEffect(() => {
-        // Pokud BaseCreateButton změní stav na true, spustíme akci
-        if (props.show) {
-            console.log("Falešný dialog OTEVŘEN! Odesílám data...");
-            
-            if (props.mutationAsyncAction) {
-                // Zavoláme funkci, kterou jsme mu poslali ze StudyPlanDetail
-                props.mutationAsyncAction(props.item); 
+            if (!studyPlanVariables.semesterId || !studyPlanVariables.eventId) {
+                alert("Chybí povinná data (Semestr nebo Událost).");
+                return;
             }
 
-            // Bezpečné zavření dialogu (podpora více verzí šablony)
+            // KROK 1: Vytvoříme Plán a získáme planId (Tohle celou dobu fungovalo!)
+            const planResult = await insertPlan(studyPlanVariables);
+            const newPlanId = planResult?.data?.studyPlanInsert?.id || planResult?.id;
+            
+            if (!newPlanId) {
+                throw new Error("Nepodařilo se založit plán.");
+            }
+
+            const plannedTopics = item.plannedTopics || [];
+            
+            for (let i = 0; i < plannedTopics.length; i++) {
+                const topic = plannedTopics[i];
+
+                // KROK 2: Vytvoříme Téma
+                const topicResult = await createTopic({
+                    semesterId: studyPlanVariables.semesterId,
+                    name: topic.name,
+                    order: i + 1
+                });
+                
+                const newTopicId = topicResult?.data?.topicInsert?.id || topicResult?.id;
+
+                // KROK 3: Vytvoříme propojovací StudyPlanLesson
+                if (newTopicId && topic.lessons && topic.lessons.length > 0) {
+                    for (const lesson of topic.lessons) {
+                        if (!lesson.lessontypeId) continue;
+
+                        await addStudyPlanLesson({
+                            planId: newPlanId,           
+                            topicId: newTopicId,
+                            eventId: studyPlanVariables.eventId, // <-- Přidáno pro jistotu!
+                            lessontypeId: lesson.lessontypeId, 
+                            name: `Výuka k tématu: ${topic.name}`, 
+                            length: parseInt(lesson.count, 10) || 1 
+                        });
+                    }
+                }
+            }
+            
             if (props.onHide) props.onHide();
-            if (props.handleClose) props.handleClose();
-            if (props.close) props.close();
+            if (props.onOk) props.onOk(planResult);
+
+        } catch (error) {
+            console.error("Chyba při ukládání:", error);
+            alert("Při ukládání došlo k chybě. Otevřete konzoli (F12) pro detaily.");
         }
-    }, [props.show]);
+    };
 
-    // Místo null vracíme skrytý prvek, aby si Bootstrap nestěžoval
-    return <div style={{ display: 'none' }}>Falešný dialog</div>;
-};
-
-export const InstantActionButton = (props) => {
     return (
-        <CreateButton 
-            {...props} 
-            CreateDialog={AutoSubmitDialog} 
+        <BaseCreateDialog 
+            {...props}
+            title="Nový studijní plán" 
+            DefaultContent={MediumEditableContent} 
+            onOk={handleOk}
+            okButtonProps={{ disabled: isLoading }}
         />
     );
 };
 
-
-
-export const CreateButton = ({
-    mutationAsyncAction=MutationAsyncAction,
-    CreateDialog: CreateDialog_=CreateDialog,
-    DefaultContent:defaultContent=DefaultContent,
-    readItemURI=ReadItemURI, 
-    rbacitem,
-    item=defaultitem,
-    ...props
-}) => {
-    return <BaseCreateButton 
+// ── EXPORT TLAČÍTKA ──
+export const CreateButton = (props) => (
+    <BaseCreateButton 
         {...props}
-        DefaultContent={defaultContent} 
-        CreateDialog={CreateDialog_}
-        readItemURI={readItemURI}
-        rbacitem={rbacitem}
-        item={item}
-        mutationAsyncAction={mutationAsyncAction}
+        DefaultContent={MediumEditableContent} 
+        CreateDialog={CustomCreateDialog} 
+        
+        
         {...permissions}
     />
-}
+);
 
-/**
- * Wrapper nad `BaseCreateDialog` (alias importu `CreateDialog` z Base/Mutations/Create),
- * který je odvozený z obecných `General*` komponent.
- *
- * Účel wrapperu:
- * - nastaví výchozí title, obsah formuláře a výchozí draft (`item`)
- * - předá `readItemURI` pro případnou navigaci po vytvoření (dle implementace Base/General)
- * - umožní přepsat `mutationAsyncAction` (pokud BaseCreateDialog mutaci používá)
- *
- * Mutaci provadi až tlačítko (`BaseCreateButton`) Dialog jen zobrazuje a zabezpecuje sber dat
- * a dialog je jen “formulář”. 
- *
- * @param {Object} params
- * @param {string} [params.title="Nov(ý/é)"]
- *   Titulek dialogu.
- *
- * @param {Function} [params.mutationAsyncAction=MutationAsyncAction]
- *   Async action (thunk) pro vytvoření entity. Použije se pouze pokud ho `BaseCreateDialog` skutečně volá
- *   (záleží na Base/General implementaci).
- *
- * @param {React.ComponentType<Object>} [params.DefaultContent=DefaultContent]
- *   Komponenta, která vykreslí editable obsah formuláře (typicky MediumEditableContent).
- *
- * @param {string} [params.readItemURI=ReadItemURI]
- *   URI pattern pro navigaci na detail nově vytvořené entity (obvykle obsahuje `:id`).
- *
- * @param {Object} [params.item=defaultitem]
- *   Výchozí objekt (draft) pro nový záznam. Posílá se do dialogu jako `item`.
- *
- * @param {Object} params.props
- *   Všechny další props jsou přeposlány přímo do `BaseCreateDialog`
- *   (typicky `oklabel`, `cancellabel`, `onOk`, `onCancel`, `className`, atd.).
- *
- * @returns {JSX.Element} Vykreslí `BaseCreateDialog` s přednastavenými defaulty.
- */
-export const CreateDialog = ({
-    title = "Nov(ý/é)",
-    // mutationAsyncAction=MutationAsyncAction,
-    DefaultContent:defaultContent=DefaultContent,
-    readItemURI=ReadItemURI, 
-    item=defaultitem,
-    ...props
-}) => {
-    return <BaseCreateDialog 
-        {...props} 
-        title={title}
-        DefaultContent={defaultContent} 
-        readItemURI={readItemURI}
-        item={item}
-        // mutationAsyncAction={mutationAsyncAction}
-    />
-};
-
-/**
- * Wrapper nad `BaseCreateBody` (alias importu `CreateBody` z Base/Mutations/Create),
- * který je odvozený z obecných `General*` komponent.
- *
- * `CreateBody` typicky reprezentuje “page-level” create workflow (ne jen tlačítko + modal):
- * - vykreslí create formulář pomocí `DefaultContent`
- * - zajistí uložení přes `mutationAsyncAction` (dle Base/General implementace)
- * - po úspěchu může navigovat na detail vytvořené entity přes `readItemURI` (pokud Base/General takto funguje)
- *
- * Wrapper pouze nastavuje defaulty a přeposílá props do `BaseCreateBody`.
- * 
- * Vizualizuje <DefaultContent />, sbira zmeny a umoznuje volani backendu pro ulozeni dat
- *
- * @param {Object} params
- * @param {Function} [params.mutationAsyncAction=MutationAsyncAction]
- *   Async action (thunk) pro vytvoření entity (např. InsertAsyncAction). Používá ho Base/General logika.
- *
- * @param {React.ComponentType<Object>} [params.DefaultContent=DefaultContent]
- *   Komponenta, která vykreslí editable obsah formuláře (typicky MediumEditableContent).
- *
- * @param {string} [params.readItemURI=ReadItemURI]
- *   URI pattern pro navigaci na detail nově vytvořené entity (obvykle obsahuje `:id`).
- *
- * @param {Object} params.props
- *   Všechny další props jsou přeposlány přímo do `BaseCreateBody`
- *   (typicky `title`, `oklabel`, `cancellabel`, `onOk`, `onCancel`, `className`, atd.).
- *
- * @returns {JSX.Element} Vykreslí `BaseCreateBody` s přednastavenými defaulty.
- */
-export const CreateBody = ({
-    mutationAsyncAction=MutationAsyncAction,
-    DefaultContent:defaultContent=DefaultContent,
-    readItemURI=ReadItemURI, 
-    ...props
-}) => {
-    return <BaseCreateBody 
-        {...props} 
-        DefaultContent={defaultContent} 
-        readItemURI={readItemURI}
-        mutationAsyncAction={mutationAsyncAction}
-    />
-};
-
+export const CreateDialog = (props) => <BaseCreateDialog {...props} />;
+export const CreateBody = (props) => <BaseCreateBody {...props} DefaultContent={MediumEditableContent} />;
+export const CreateLink = ({ uriPattern=CreateURI, ...props }) => (
+    <BaseCreateLink {...props} uriPattern={uriPattern} {...permissions} />
+);

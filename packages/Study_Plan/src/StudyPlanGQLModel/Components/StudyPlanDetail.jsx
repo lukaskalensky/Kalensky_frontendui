@@ -140,8 +140,11 @@ const InfoPanel = ({ item }) => {
                 <CreateButton
                     className="btn btn-sm btn-outline-success w-100"
                     rbacitem={item}
-                    item={{ semesterId: item?.semesterId, 
-                        eventIdId: item?.eventId }}
+                    // Zde předáváte počáteční data do formuláře (MediumEditableContent)
+                    item={{ 
+                        semesterId: item?.semesterId, 
+                        eventId: item?.eventId // <-- OPRAVEN PŘEKLEP Z 'eventIdId'
+                    }}
                 >
                     Vytvořit nový plán
                 </CreateButton>
