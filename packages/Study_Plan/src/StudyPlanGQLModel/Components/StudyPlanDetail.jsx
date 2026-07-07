@@ -181,40 +181,58 @@ const InfoPanel = ({ item }) => {
 
 // ── 3. HLAVIČKA TÉMATU (NÁZEV + BADGES S POČTY) ──
 const TopicHeader = ({ topic, lessons }) => {
-    const actualByTypeName = (lessons || []).reduce((acc, l) => {
+    // 1. Získáme SKUTEČNÝ stav (počet lekcí vs. součet hodin)
+    const statsByTypeName = (lessons || []).reduce((acc, l) => {
         const typeName = l.lessontype?.name || l.lessontype?.nameEn || null;
         if (!typeName) return acc;
-        acc[typeName] = (acc[typeName] || 0) + 1;
+        
+        if (!acc[typeName]) {
+            acc[typeName] = { actualCount: 0, totalLength: 0 };
+        }
+        
+        // actualCount = počet řádků (lekcí), které uživatel přidal
+        acc[typeName].actualCount += 1;
+        // totalLength = součet délek (pro případné dorovnání jmenovatele)
+        acc[typeName].totalLength += (l.length || 0);
+        
         return acc;
     }, {});
 
+    // 2. Získáme PLÁNOVANÝ stav (z osnovy)
     const plannedByTypeName = (topic?.lessons || []).reduce((acc, l) => {
         const typeName = l.type?.name || l.type?.nameEn || null;
         if (!typeName) return acc;
-        acc[typeName] = l.count || 0;
+        acc[typeName] = (acc[typeName] || 0) + (l.count || 0);
         return acc;
     }, {});
 
-    const allTypeNames = new Set([...Object.keys(actualByTypeName), ...Object.keys(plannedByTypeName)]);
-    const typeEntries = [...allTypeNames].map(typeName => ({
-        typeName,
-        actual: actualByTypeName[typeName] || 0,
-        planned: plannedByTypeName[typeName] ?? null,
-    }));
+    // 3. Sloučíme
+    const allTypeNames = new Set([...Object.keys(statsByTypeName), ...Object.keys(plannedByTypeName)]);
+    const typeEntries = [...allTypeNames].map(typeName => {
+        const stats = statsByTypeName[typeName] || { actualCount: 0, totalLength: 0 };
+        
+        // Čitatel je počet řádků (1 lekce = 1)
+        const actual = stats.actualCount; 
+        
+        // Jmenovatel je z osnovy, nebo součet délek, pokud osnova chybí
+        let planned = plannedByTypeName[typeName] || 0;
+        if (planned === 0 && stats.totalLength > 0) {
+            planned = stats.totalLength;
+        }
+
+        return { typeName, actual, planned };
+    });
 
     return (
         <div className="d-flex align-items-center flex-wrap gap-2 flex-grow-1">
-            <ProxyLink
-                to={`/granting/TopicGQLModel/view/${topic.id}`}
-                className="fw-bold text-decoration-none text-dark text-nowrap"
-            >
+            <span className="fw-bold text-dark text-nowrap">
                 {topic.name || topic.nameEn || `Téma ${topic.order ?? ""}`}
-            </ProxyLink>
+            </span>
             
             <div className="d-flex gap-2 ms-2">
                 {typeEntries.map(({ typeName, actual, planned }) => (
                     <span key={typeName} className="badge bg-white text-secondary border border-secondary border-opacity-25 fw-normal">
-                        {planned !== null ? `${actual}/${planned}` : `${actual}x`} {typeName}
+                        {actual}/{planned} {typeName}
                     </span>
                 ))}
             </div>
@@ -576,8 +594,17 @@ export const StudyPlanDetail = ({ item: incomingItem, children }) => {
     
     // 3. Sloučíme obě skupiny a odstraníme duplicity podle ID tématu
     const allTopicsMap = new Map();
+    
+    // Nejprve uložíme témata ze semestru (tyto v sobě nesou KOMPLETNÍ šablony 4x a 2x)
     semesterTopics.forEach(t => allTopicsMap.set(t.id, t));
-    lessonTopics.forEach(t => allTopicsMap.set(t.id, t));
+    
+    // Témata získaná z lekcí přidáme POUZE tehdy, pokud v mapě ještě nejsou.
+    // Tím zabráníme, aby se kompletní šablony přepsaly ořezanými daty z mutace.
+    lessonTopics.forEach(t => {
+        if (!allTopicsMap.has(t.id)) {
+            allTopicsMap.set(t.id, t);
+        }
+    });
     
     // Vytvoříme finální čisté pole VŠECH témat
     const allUniqueTopics = Array.from(allTopicsMap.values());
