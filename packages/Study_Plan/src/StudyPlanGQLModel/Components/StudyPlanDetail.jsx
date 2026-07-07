@@ -6,7 +6,6 @@ import { ProxyLink } from "../../../../_template/src/Base/Components/ProxyLink"
 import { SelectionContext } from "./SelectionContext";
 import { useAsync, useAsyncThunkAction } from "../../../../dynamic/src/Hooks";
 import { AsyncStateIndicator } from "../../../../_template/src/Base";
-
 // Importy akcí
 import { CreateButton } from '../Mutations/Create';
 import { DeleteButton } from '../Mutations/Delete';
@@ -27,6 +26,7 @@ import {
     addGroupLocal, removeGroupLocal,
     deleteLessonLocal, setStudyPlan
 } from "../Queries/StudyPlanSlice"; 
+import CustomCreateDialog from './CreateStudyPlan';
 
 
 // ── 1. POMOCNÁ KOMPONENTA PRO ŘÁDEK V INFO PANELU ──
@@ -78,6 +78,8 @@ const InfoPanel = ({ item }) => {
     const subjectName = semester?.subject?.name || semester?.subject?.nameEn || null
     const semesterOrder = semester?.order ?? null
     const examName = item?.exam?.name || null
+
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     return (
         <div className="col-12 col-md-4 col-lg-3 p-3 mx-3 my-2 bg-white rounded border border-success border-opacity-50">
@@ -137,23 +139,41 @@ const InfoPanel = ({ item }) => {
             <ExpectedTeachers lessons={item?.lessons} />
 
             <div className="mt-3 d-flex flex-column gap-2">
-                <CreateButton
+                
+                {/* 1. Tlačítko, které otevírá dialog */}
+                <button
                     className="btn btn-sm btn-outline-success w-100"
-                    rbacitem={item}
-                    // Zde předáváte počáteční data do formuláře (MediumEditableContent)
-                    item={{ 
-                        semesterId: item?.semesterId, 
-                        eventId: item?.eventId // <-- OPRAVEN PŘEKLEP Z 'eventIdId'
-                    }}
+                    onClick={() => setIsDialogOpen(true)}
                 >
                     Vytvořit nový plán
-                </CreateButton>
+                </button>
+
                 <DeleteButton
                     className="btn btn-sm btn-outline-danger w-100"
                     item={item}
                 >
                     Smazat plán
                 </DeleteButton>
+
+                {/* 2. Samotný dialog (vykreslí se, jen když je isDialogOpen === true) */}
+                {isDialogOpen && (
+                    <CustomCreateDialog
+                        show={isDialogOpen}
+                        onHide={() => setIsDialogOpen(false)} // Zavření křížkem
+                        onOk={(result) => {
+                            console.log("Plán byl úspěšně vygenerován!", result);
+                            setIsDialogOpen(false); // Zavření po úspěšném uložení
+                            // Zde můžeš případně zavolat i reload dat, pokud potřebuješ:
+                            // reloadPlan({ id: item?.id }) apod.
+                        }}
+                        // Předáváme item stejně, jako ho dostával tvůj starý CreateButton,
+                        // aby měl formulář přístup k semesterId a eventId
+                        item={{ 
+                            semesterId: item?.semesterId, 
+                            eventId: item?.eventId 
+                        }}
+                    />
+                )}
             </div>
         </div>
     )
@@ -546,10 +566,23 @@ export const StudyPlanDetail = ({ item: incomingItem, children }) => {
     const activeItem = reduxItem || incomingItem;
 
     const semester = activeItem?.semester;
-    const topics = semester?.topics || [];
     const lessons = activeItem?.lessons || [];
     
-    // Rozřazení živých lekcí k tématům
+    // 1. Získáme témata, která o sobě ví semestr (z cache)
+    const semesterTopics = semester?.topics || [];
+    
+    // 2. Vyzobeme nová témata, která jsou "schovaná" uvnitř samotných lekcí
+    const lessonTopics = lessons.map(l => l.topic).filter(Boolean);
+    
+    // 3. Sloučíme obě skupiny a odstraníme duplicity podle ID tématu
+    const allTopicsMap = new Map();
+    semesterTopics.forEach(t => allTopicsMap.set(t.id, t));
+    lessonTopics.forEach(t => allTopicsMap.set(t.id, t));
+    
+    // Vytvoříme finální čisté pole VŠECH témat
+    const allUniqueTopics = Array.from(allTopicsMap.values());
+    
+    // 4. Rozřazení živých lekcí k tématům (tato část zůstává stejná)
     const lessonsByTopic = lessons.reduce((acc, l) => {
         const tid = l.topicId;
         if (!acc[tid]) acc[tid] = [];
@@ -557,7 +590,8 @@ export const StudyPlanDetail = ({ item: incomingItem, children }) => {
         return acc;
     }, {});
     
-    const sortedTopics = [...topics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    // 5. Seřadíme všechna unikátní témata
+    const sortedTopics = allUniqueTopics.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     return (
         <div className="min-vh-100">
