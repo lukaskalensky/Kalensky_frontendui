@@ -611,22 +611,17 @@ export const StudyPlanDetail = ({ item: incomingItem, children }) => {
     const activeItem = reduxItem || incomingItem;
 
     const semester = activeItem?.semester;
-    const lessons = activeItem?.lessons || [];
+    const lessons = activeItem?.lessons || []; // Tohle jsou ty "živé" vytvořené lekce
     
-    // 1. SLOUČENÍ TÉMAT (bez duplicit)
-    // Dáme lekce z `lessons` na začátek a `semester.topics` na konec. 
-    // Pokud se ID tématu opakuje, `semester.topics` (které obsahují kompletní osnovu) přepisují ta předchozí.
-    const mergedTopics = new Map(
-        [
-            ...lessons.map(l => l.topic).filter(Boolean), 
-            ...(semester?.topics || [])
-        ].map(topic => [topic.id, topic])
-    );
-    
-    // 2. PŘEVOD NA POLE A SEŘAZENÍ
-    const sortedTopics = Array.from(mergedTopics.values()).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    
-    // 3. ROZŘAZENÍ LEKCÍ K TÉMATŮM (elegantnější zápis s kráceným ifem)
+    // ==========================================
+    // TADY JE TO MASIVNÍ ZJEDNODUŠENÍ
+    // Témata bereme POUZE z activeItem.semester.topics.
+    // Nemusíme spojovat nic s lekcemi ani odstraňovat duplicity!
+    // ==========================================
+    const semesterTopics = semester?.topics || [];
+    const sortedTopics = [...semesterTopics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    // 4. Rozřazení "živých" lekcí k tématům (toto potřebujeme, abychom je mohli poslat do TopicRow jako čitatele)
     const lessonsByTopic = lessons.reduce((acc, l) => {
         (acc[l.topicId] = acc[l.topicId] || []).push(l);
         return acc;
