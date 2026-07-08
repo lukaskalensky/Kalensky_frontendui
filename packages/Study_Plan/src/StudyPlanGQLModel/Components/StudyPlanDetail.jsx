@@ -24,7 +24,7 @@ import {
     addInstructorLocal, removeInstructorLocal,
     addFacilityLocal, removeFacilityLocal,
     addGroupLocal, removeGroupLocal,
-    deleteLessonLocal, setStudyPlan
+    deleteLessonLocal, setStudyPlan, addLessonLocal
 } from "../Queries/StudyPlanSlice"; 
 import CustomCreateDialog from './CreateStudyPlan';
 
@@ -241,30 +241,20 @@ const TopicHeader = ({ topic, lessons }) => {
 }
 
 // ── 4. FORMULÁŘ PRO PŘIDÁNÍ LEKCE ──
-const AddLessonForm = ({ topicId, planId }) => {
+const AddLessonForm = ({ topicId, planId, lessonTypes }) => {
+
+    const dispatch = useDispatch();
+
     const [lessonName, setLessonName] = useState("");
-    const [lessonTypes, setLessonTypes] = useState([]);
     const [selectedLessonTypeId, setSelectedLessonTypeId] = useState("");
 
     const { run: addLesson, loading } = useAsync(AddLessonAsyncAction, null, { deferred: true });
-    const { run: fetchLessonTypes } = useAsync(ReadLessonAsyncAction, null, { deferred: true });
-    const { run: reloadPlan } = useAsyncThunkAction(FetchMojeDataAction, null, { deferred: true });
 
     useEffect(() => {
-        const loadLessonTypes = async () => {
-            try {
-                const response = await fetchLessonTypes({ limit: 1000 });
-                const fetchedTypes = response?.data?.lessonTypePage || response?.lessonTypePage || [];
-                setLessonTypes(fetchedTypes);
-                if (fetchedTypes.length > 0) {
-                    setSelectedLessonTypeId(fetchedTypes[0].id);
-                }
-            } catch (e) {
-                console.error("Chyba při načítání typů výuky:", e);
-            }
-        };
-        loadLessonTypes();
-    }, []);
+        if (lessonTypes && lessonTypes.length > 0 && !selectedLessonTypeId) {
+            setSelectedLessonTypeId(lessonTypes[0].id);
+        }
+    }, [lessonTypes, selectedLessonTypeId]);
 
     const handleSave = async () => {
         if (!selectedLessonTypeId) {
@@ -280,12 +270,38 @@ const AddLessonForm = ({ topicId, planId }) => {
         };
 
         try {
-            await addLesson(insertPayload);
+            // 1. Pošleme na server
+            const result = await addLesson(insertPayload);
+            
+            // 2. Vytvoříme lokální objekt lekce pro Redux (vezmeme ID z odpovědi serveru)
+            // Cesty k ID (result.data...) si uprav podle toho, co reálně vrací tvé GraphQL
+            const newLessonId = result?.data?.lessonInsert?.id || result?.id || Math.random().toString(); 
+            
+            // Najdeme celý objekt typu výuky, aby se nám v UI hned správně vypsal badge (odznáček)
+            const selectedTypeObj = lessonTypes.find(t => t.id === selectedLessonTypeId);
+
+            const newLessonForRedux = {
+                id: newLessonId,
+                name: insertPayload.name,
+                topicId: insertPayload.topicId,
+                lessontypeId: insertPayload.lessontypeId,
+                lessontype: selectedTypeObj, // Pro zobrazení názvu typu v UI
+                instructors: [],
+                facilities: [],
+                studyGroups: []
+            };
+
+            // 3. Uložíme lokálně do Reduxu
+            dispatch(addLessonLocal({ lesson: newLessonForRedux }));
+
+            // 4. Vyčistíme formulář
             setLessonName("");
-            alert("Lekce byla přidána.");
-            await reloadPlan({ id: planId, limit: 1000 });
+            
+            // ODEBRÁNO: await reloadPlan({ id: planId, limit: 1000 });
+
         } catch (err) {
             console.error("Chyba při ukládání lekce:", err);
+            alert("Nepodařilo se přidat lekci.");
         }
     };
 
@@ -305,8 +321,9 @@ const AddLessonForm = ({ topicId, planId }) => {
                     value={selectedLessonTypeId}
                     onChange={(e) => setSelectedLessonTypeId(e.target.value)}
                 >
-                    {lessonTypes.length === 0 && <option value="">Načítám...</option>}
-                    {lessonTypes.map((type) => (
+                    {/* Mapujeme rovnou data z props */}
+                    {(!lessonTypes || lessonTypes.length === 0) && <option value="">Načítám...</option>}
+                    {lessonTypes?.map((type) => (
                         <option key={type.id} value={type.id}>
                             {type.name || type.nameEn || type.id}
                         </option>
@@ -540,12 +557,13 @@ const LessonRow = ({ lesson, planId }) => {
 };
 
 // ── 6. ORECHESTRAČNÍ KOMPONENTA PRO JEDNO TÉMA ──
-const TopicRow = ({ topic, lessons, planId }) => {
+const TopicRow = ({ topic, lessons, planId, lessonTypes }) => {
     return (
         <div className="border-bottom border-danger border-opacity-25">
             <div className="d-flex align-items-center justify-content-between px-4 py-3 gap-3">
                 <TopicHeader topic={topic} lessons={lessons} />
-                <AddLessonForm topicId={topic.id} planId={planId} />
+                {/* PŘIDÁNO: předání do formuláře */}
+                <AddLessonForm topicId={topic.id} planId={planId} lessonTypes={lessonTypes} />
             </div>
 
             {lessons && lessons.length > 0 && (
@@ -569,6 +587,23 @@ const TopicRow = ({ topic, lessons, planId }) => {
 
 export const StudyPlanDetail = ({ item: incomingItem, children }) => {
     const dispatch = useDispatch();
+
+    const [globalLessonTypes, setGlobalLessonTypes] = useState([]);
+    const { run: fetchLessonTypes } = useAsync(ReadLessonAsyncAction, null, { deferred: true });
+
+    // 2. PŘIDÁNO: Načtení proběhne pouze jednou při mountování hlavní komponenty
+    useEffect(() => {
+        const loadTypes = async () => {
+            try {
+                const response = await fetchLessonTypes({ limit: 1000 });
+                const fetchedTypes = response?.data?.lessonTypePage || response?.lessonTypePage || [];
+                setGlobalLessonTypes(fetchedTypes);
+            } catch (e) {
+                console.error("Chyba při načítání typů výuky:", e);
+            }
+        };
+        loadTypes();
+    }, []);
 
     // Načtení dat z props do Reduxu při prvním renderu
     useEffect(() => {
@@ -641,6 +676,7 @@ export const StudyPlanDetail = ({ item: incomingItem, children }) => {
                             topic={topic}
                             lessons={lessonsByTopic[topic.id] || []}
                             planId={activeItem?.id}
+                            lessonTypes={globalLessonTypes}
                         />
                     ))
                 )}

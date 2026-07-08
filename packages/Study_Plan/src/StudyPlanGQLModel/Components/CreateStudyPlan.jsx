@@ -81,6 +81,10 @@ export const CustomCreateDialog = (props) => {
             title="Nový studijní plán" 
             DefaultContent={MediumEditableContent} 
             onOk={handleOk}
+            // PŘIDÁNO: Explicitní mapování zavíracích akcí
+            onCancel={props.onHide} 
+            onHide={props.onHide}
+            // ------------------------------------------
             okButtonProps={{ disabled: isLoading }}
         />
     );

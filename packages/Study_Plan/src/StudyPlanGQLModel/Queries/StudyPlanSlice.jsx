@@ -83,6 +83,18 @@ const studyPlanSlice = createSlice({
                 // Prostě vyhodíme celou lekci z hlavního pole
                 state.item.lessons = state.item.lessons.filter(l => l.id !== lessonId);
             }
+        },
+        addLessonLocal: (state, action) => {
+            const { lesson } = action.payload;
+            
+            if (state.item) {
+                // Pokud pole lessons ještě neexistuje, vytvoříme ho
+                if (!state.item.lessons) {
+                    state.item.lessons = [];
+                }
+                // Přidáme novou lekci na konec pole
+                state.item.lessons.push(lesson);
+            }
         }
     }
 });
@@ -96,7 +108,8 @@ export const {
     removeFacilityLocal,
     addGroupLocal,
     removeGroupLocal,
-    deleteLessonLocal
+    deleteLessonLocal,
+    addLessonLocal
 } = studyPlanSlice.actions;
 
 // Exportujeme reducer, který se musí zaregistrovat v hlavním store.js
