@@ -53,7 +53,7 @@ const ExpectedTeachers = ({ lessons }) => {
 
     return (
         <div className="mt-3 p-2 rounded border border-primary border-opacity-25 bg-primary bg-opacity-10">
-            <div className="fw-semibold small mb-2">👥 Předvídaní vyučující ({teachers.length})</div>
+            <div className="fw-semibold small mb-2">👥 Přiřazení vyučující ({teachers.length})</div>
             {teachers.length === 0 ? (
                 <div className="text-muted fst-italic small">Zatím nepřiřazeni</div>
             ) : (
@@ -181,47 +181,33 @@ const InfoPanel = ({ item }) => {
 
 // ── 3. HLAVIČKA TÉMATU (NÁZEV + BADGES S POČTY) ──
 const TopicHeader = ({ topic, lessons }) => {
-    // 1. Získáme SKUTEČNÝ stav (počet lekcí vs. součet hodin)
-    const statsByTypeName = (lessons || []).reduce((acc, l) => {
-        const typeName = l.lessontype?.name || l.lessontype?.nameEn || null;
-        if (!typeName) return acc;
-        
-        if (!acc[typeName]) {
-            acc[typeName] = { actualCount: 0, totalLength: 0 };
+    
+    // 1. PLÁNOVANÝ STAV (Jmenovatel) 
+    // Projdeme šablonu (topic.lessons) a sečteme 'count' pro jednotlivé typy.
+    const plannedStats = (topic?.lessons || []).reduce((acc, l) => {
+        const typeName = l.type?.name || l.type?.nameEn;
+        if (typeName) {
+            acc[typeName] = (acc[typeName] || 0) + (l.count || 0);
         }
-        
-        // actualCount = počet řádků (lekcí), které uživatel přidal
-        acc[typeName].actualCount += 1;
-        // totalLength = součet délek (pro případné dorovnání jmenovatele)
-        acc[typeName].totalLength += (l.length || 0);
-        
         return acc;
     }, {});
 
-    // 2. Získáme PLÁNOVANÝ stav (z osnovy)
-    const plannedByTypeName = (topic?.lessons || []).reduce((acc, l) => {
-        const typeName = l.type?.name || l.type?.nameEn || null;
-        if (!typeName) return acc;
-        acc[typeName] = (acc[typeName] || 0) + (l.count || 0);
+    // 2. SKUTEČNÝ STAV (Čitatel) 
+    // Projdeme reálně vytvořené lekce v tabulce (lessons) a za každou přičteme 1.
+    const actualStats = (lessons || []).reduce((acc, l) => {
+        const typeName = l.lessontype?.name || l.lessontype?.nameEn;
+        if (typeName) {
+            acc[typeName] = (acc[typeName] || 0) + 1; 
+        }
         return acc;
     }, {});
 
-    // 3. Sloučíme
-    const allTypeNames = new Set([...Object.keys(statsByTypeName), ...Object.keys(plannedByTypeName)]);
-    const typeEntries = [...allTypeNames].map(typeName => {
-        const stats = statsByTypeName[typeName] || { actualCount: 0, totalLength: 0 };
-        
-        // Čitatel je počet řádků (1 lekce = 1)
-        const actual = stats.actualCount; 
-        
-        // Jmenovatel je z osnovy, nebo součet délek, pokud osnova chybí
-        let planned = plannedByTypeName[typeName] || 0;
-        if (planned === 0 && stats.totalLength > 0) {
-            planned = stats.totalLength;
-        }
-
-        return { typeName, actual, planned };
-    });
+    // 3. SLOUČENÍ A VYKRESLENÍ
+    // Získáme unikátní názvy typů z obou objektů (aby se vypsaly i ty, kde je zatím 0/X)
+    const allTypeNames = Array.from(new Set([
+        ...Object.keys(plannedStats), 
+        ...Object.keys(actualStats)
+    ]));
 
     return (
         <div className="d-flex align-items-center flex-wrap gap-2 flex-grow-1">
@@ -230,11 +216,17 @@ const TopicHeader = ({ topic, lessons }) => {
             </span>
             
             <div className="d-flex gap-2 ms-2">
-                {typeEntries.map(({ typeName, actual, planned }) => (
-                    <span key={typeName} className="badge bg-white text-secondary border border-secondary border-opacity-25 fw-normal">
-                        {actual}/{planned} {typeName}
-                    </span>
-                ))}
+                {allTypeNames.map(typeName => {
+                    // Pokud některá hodnota chybí, je to 0
+                    const actual = actualStats[typeName] || 0;
+                    const planned = plannedStats[typeName] || 0;
+                    
+                    return (
+                        <span key={typeName} className="badge bg-white text-secondary border border-secondary border-opacity-25 fw-normal">
+                            {actual}/{planned} {typeName}
+                        </span>
+                    );
+                })}
             </div>
         </div>
     )

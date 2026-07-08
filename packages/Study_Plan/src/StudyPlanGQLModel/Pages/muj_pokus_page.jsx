@@ -128,6 +128,18 @@ fragment StudyPlanLesson on StudyPlanLessonGQLModel {
     id
     name
     nameEn
+    lessons {
+    __typename
+    id
+    count
+    typeId
+    type {
+      __typename
+      id
+      name
+      nameEn
+    }
+  }
   }
   lessontypeId
   lessontype {
