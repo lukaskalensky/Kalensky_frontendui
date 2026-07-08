@@ -613,39 +613,24 @@ export const StudyPlanDetail = ({ item: incomingItem, children }) => {
     const semester = activeItem?.semester;
     const lessons = activeItem?.lessons || [];
     
-    // 1. Získáme témata, která o sobě ví semestr (z cache)
-    const semesterTopics = semester?.topics || [];
+    // 1. SLOUČENÍ TÉMAT (bez duplicit)
+    // Dáme lekce z `lessons` na začátek a `semester.topics` na konec. 
+    // Pokud se ID tématu opakuje, `semester.topics` (které obsahují kompletní osnovu) přepisují ta předchozí.
+    const mergedTopics = new Map(
+        [
+            ...lessons.map(l => l.topic).filter(Boolean), 
+            ...(semester?.topics || [])
+        ].map(topic => [topic.id, topic])
+    );
     
-    // 2. Vyzobeme nová témata, která jsou "schovaná" uvnitř samotných lekcí
-    const lessonTopics = lessons.map(l => l.topic).filter(Boolean);
+    // 2. PŘEVOD NA POLE A SEŘAZENÍ
+    const sortedTopics = Array.from(mergedTopics.values()).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
-    // 3. Sloučíme obě skupiny a odstraníme duplicity podle ID tématu
-    const allTopicsMap = new Map();
-    
-    // Nejprve uložíme témata ze semestru (tyto v sobě nesou KOMPLETNÍ šablony 4x a 2x)
-    semesterTopics.forEach(t => allTopicsMap.set(t.id, t));
-    
-    // Témata získaná z lekcí přidáme POUZE tehdy, pokud v mapě ještě nejsou.
-    // Tím zabráníme, aby se kompletní šablony přepsaly ořezanými daty z mutace.
-    lessonTopics.forEach(t => {
-        if (!allTopicsMap.has(t.id)) {
-            allTopicsMap.set(t.id, t);
-        }
-    });
-    
-    // Vytvoříme finální čisté pole VŠECH témat
-    const allUniqueTopics = Array.from(allTopicsMap.values());
-    
-    // 4. Rozřazení živých lekcí k tématům (tato část zůstává stejná)
+    // 3. ROZŘAZENÍ LEKCÍ K TÉMATŮM (elegantnější zápis s kráceným ifem)
     const lessonsByTopic = lessons.reduce((acc, l) => {
-        const tid = l.topicId;
-        if (!acc[tid]) acc[tid] = [];
-        acc[tid].push(l);
+        (acc[l.topicId] = acc[l.topicId] || []).push(l);
         return acc;
     }, {});
-    
-    // 5. Seřadíme všechna unikátní témata
-    const sortedTopics = allUniqueTopics.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     return (
         <div className="min-vh-100">
