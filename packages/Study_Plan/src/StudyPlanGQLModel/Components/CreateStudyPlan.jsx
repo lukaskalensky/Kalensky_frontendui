@@ -7,6 +7,10 @@ import { AddLessonAsyncAction } from '../Queries/AddLesson';
 import {CreateDialog} from '../Mutations/Create';
 import {MediumEditableContent} from '../Components/MediumEditableContent';
 import { InsertLessonTemplateAsyncAction } from '../Queries/LessonsTemplate';
+import { useNavigate } from 'react-router-dom';
+// Zkontroluj si správnou relativní cestu k tvému Link.jsx!
+import { ReadURI } from '../Components/Link';
+
 
 export const CustomCreateDialog = (props) => {
     const { run: insertPlan, loading: loadingPlan } = useAsync(InsertAsyncAction, null, { deferred: true });
@@ -16,6 +20,8 @@ export const CustomCreateDialog = (props) => {
     const { run: insertLessonTemplate } = useAsync(InsertLessonTemplateAsyncAction, null, { deferred: true });
 
     const isLoading = loadingPlan || loadingTopic || loadingLesson;
+
+    const navigate = useNavigate();
 
     const handleOk = async (item) => {
         try {
@@ -70,6 +76,8 @@ export const CustomCreateDialog = (props) => {
             
             if (props.onHide) props.onHide();
             if (props.onOk) props.onOk(planResult);
+
+            navigate(`${ReadURI}${newPlanId}`);
 
         } catch (error) {
             console.error("Chyba při ukládání:", error);
