@@ -57,26 +57,37 @@ export const OstatniURIPage = `${OstatniURI}${idParam}`;
 // StudyPlanGQLModel, přesměruje se na obecnou "vseostatni" URL (OstatniURI) místo
 // URL specifické pro studijní plán. Text odkazu se bere v pořadí fullname → name → id,
 // podle toho, co daný typ entity zrovna má.
-export const Link = ({ item, LinkURI: LinkURI_ = LinkURI, action="view", children, ...props}) => {
+const URIMap = {
+    'StudyPlanGQLModel': '/studyplan/StudyPlanGQLModel/view/', // např. původní LinkURI
+    'SemesterGQLModel': '/semestr/SemesterGQLModel/view/',
+    'UserGQLModel': '/ug/UserGQLModel/view/',
+    'EventGQLModel': '/events/event/view/'
+};
 
-    if (item?.__typename !== 'StudyPlanGQLModel') {
-        LinkURI_ = OstatniURI;
-       const targetURI = LinkURI_.replace('view', action);
-        return <ProxyLink to={targetURI + item?.id} {...props}>{children || item?.fullname || item?.name || item?.id || "Nevim"}</ProxyLink>
-    }
-    else
-    {
-    const targetURI = LinkURI_.replace('view', action);
-    return <ProxyLink to={targetURI + item?.id} {...props}>{children || item?.fullname || item?.name || item?.id || "Nevim"}</ProxyLink>
-    // return <BaseUI.Link item={item} />
-    // return <a>{children || item?.fullname || item?.name || item?.id || "Nevim"}</a>
-    }
-}
+export const Link = ({ item, LinkURI, action = "view", children, ...props }) => {
+    // 1. Zjistíme typename z itemu
+    const typename = item?.__typename;
 
+    // 2. Vytáhneme specifické URI ze slovníku. 
+    // Pokud model ve slovníku není, použijeme LinkURI z props nebo OstatniURI jako fallback.
+    let baseURI = URIMap[typename] || LinkURI || OstatniURI;
+
+    // 3. Upravíme akci (např. nahradíme 'view' za 'edit')
+    const targetURI = baseURI.replace('view', action);
+
+    // 4. Určíme text odkazu (fallback řetězec)
+    const linkText = children || item?.fullname || item?.name || item?.id || "Nevim";
+
+    // 5. Vrátíme sjednocený ProxyLink
+    return (
+        <ProxyLink to={targetURI + item?.id} {...props}>
+            {linkText}
+        </ProxyLink>
+    );
+};
 
 // Registrace zůstává stejná
-registerLink('StudyPlanGQLModel', Link)
+registerLink('StudyPlanGQLModel', Link);
 registerLink('SemesterGQLModel', Link);
-registerLink('StudyPlanLessonGQLModel', Link);
 registerLink('UserGQLModel', Link);
 registerLink('EventGQLModel', Link);

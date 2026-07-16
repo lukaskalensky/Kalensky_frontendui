@@ -408,8 +408,6 @@ const LessonRow = ({ lesson, planId }) => {
     const dispatch = useDispatch();
 
     // Async akce pro přiřazení (Add*) a odebrání (Delete*) učitele/místnosti/skupiny
-    // k/od této lekce — každá volá jinou GraphQL mutaci, protože backend nemá
-    // jednu společnou "batch" mutaci pro všechny tři typy najednou
     const { run: assignInstructor, loading: loadingInstructor } = useAsync(AddInstructorAsyncAction, null, { deferred: true });
     const { run: assignFacility, loading: loadingFacility } = useAsync(AddRoomAsyncAction, null, { deferred: true });
     const { run: assignGroup, loading: loadingGroup } = useAsync(AddGroupAsyncAction, null, { deferred: true });
@@ -419,19 +417,13 @@ const LessonRow = ({ lesson, planId }) => {
     const { run: deleteMistnost } = useAsync(DeleteRoomAsyncAction, null, { deferred: true });
     const { run: deleteSkupinu } = useAsync(DeleteGroupAsyncAction, null, { deferred: true });
 
-    // Stav potvrzovacího dialogu: co má v sobě zobrazit a jakou akci spustit po potvrzení.
-    // Díky tomu má LessonRow jen JEDEN modal pro všechny druhy mazání (učitel/místnost/
-    // skupina/lekce) místo čtyř samostatných dialogů.
+    // Stav potvrzovacího dialogu
     const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
-    // Otevře dialog s danou hláškou a zapamatuje si, co se má stát po kliknutí na "Ano"
     const withConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
-    // Zavře dialog a vynuluje jeho stav
     const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
-    // Zavolá se při kliknutí na "Ano, smazat": nejdřív dialog zavře, pak teprve spustí
-    // uloženou akci (pořadí je důležité, aby dialog nezůstal viset, kdyby akce chvíli trvala)
     const handleConfirm = async () => { closeConfirm(); if (confirmState.onConfirm) await confirmState.onConfirm(); };
 
-    // Přidá VŠECHNY vybrané učitele k lekci najednou (přeskočí ty, co už u ní jsou)
+    // Přidání učitelů
     const fvyucujici = async () => {
         const alreadyIds = new Set((lesson.instructors || []).map(i => i.id));
         const toAdd = selectedTeachers.filter(t => !alreadyIds.has(t.id));
@@ -445,9 +437,7 @@ const LessonRow = ({ lesson, planId }) => {
         }
     };
 
-    // Odebere jednoho konkrétního učitele z lekce: pošle mutaci na server a po úspěchu
-    // rovnou odečte učitele i z lokálního Redux stavu (removeInstructorLocal), aby se
-    // UI aktualizovalo okamžitě a nemuselo se čekat na nové načtení celého plánu ze serveru
+    // Odebrání učitele
     const handleRemoveInstructor = async (instructorId) => {
         try {
             await deleteVyucujiciho({ planitemId: lesson.id, userId: instructorId });
@@ -455,7 +445,7 @@ const LessonRow = ({ lesson, planId }) => {
         } catch (err) { console.error(err); }
     };
 
-    // Přidá VŠECHNY vybrané místnosti k lekci najednou (přeskočí ty, co už u ní jsou)
+    // Přidání místností
     const fmistnost = async () => {
         const alreadyIds = new Set((lesson.facilities || []).map(f => f.id));
         const toAdd = selectedRooms.filter(r => !alreadyIds.has(r.id));
@@ -469,7 +459,7 @@ const LessonRow = ({ lesson, planId }) => {
         }
     };
 
-    // Odebere jednu konkrétní místnost z lekce (mutace na server + odečtení z Redux stavu)
+    // Odebrání místnosti
     const handleRemoveFacility = async (facilityId) => {
         try {
             await deleteMistnost({ planitemId: lesson.id, facilityId: facilityId });
@@ -477,7 +467,7 @@ const LessonRow = ({ lesson, planId }) => {
         } catch (err) { console.error(err); }
     };
 
-    // Přidá VŠECHNY vybrané skupiny k lekci najednou (přeskočí ty, co už u ní jsou)
+    // Přidání skupin
     const fskupina = async () => {
         const alreadyIds = new Set((lesson.studyGroups || []).map(g => g.id));
         const toAdd = selectedGroups.filter(g => !alreadyIds.has(g.id));
@@ -491,7 +481,7 @@ const LessonRow = ({ lesson, planId }) => {
         }
     };
 
-    // Odebere jednu konkrétní skupinu z lekce (mutace na server + odečtení z Redux stavu)
+    // Odebrání skupiny
     const handleRemoveGroup = async (groupId) => {
         try {
             await deleteSkupinu({ planitemId: lesson.id, groupId: groupId });
@@ -499,10 +489,7 @@ const LessonRow = ({ lesson, planId }) => {
         } catch (err) { console.error(err); }
     };
 
-    // Smaže celou lekci (posílá se i `lastchange`, protože backend mutaci pro smazání
-    // vyžaduje kvůli optimistickému zamykání — kdyby lekci mezitím upravil někdo jiný,
-    // mutace by na neshodě lastchange selhala místo přepsání cizí změny). Po úspěchu
-    // se lekce odstraní i z Redux stavu, aby zmizela z obrazovky bez reloadu stránky.
+    // Smazání lekce
     const fsmazat = async () => {
         try {
             await deleteLesson({ id: lesson.id, lastchange: lesson.lastchange });
@@ -535,12 +522,7 @@ const LessonRow = ({ lesson, planId }) => {
                     <button type="button" className="btn-close"
                         onClick={() => withConfirm(
                             `Odebrat vyučujícího ${inst.fullname || inst.surname || "Neznámý"}?`,
-                            async () => {
-                                try {
-                                    await deleteVyucujiciho({ planitemId: lesson.id, userId: inst.id });
-                                    dispatch(removeInstructorLocal({ lessonId: lesson.id, teacherId: inst.id }));
-                                } catch (e) { console.error(e); }
-                            }
+                            () => handleRemoveInstructor(inst.id)
                         )}
                     />
                 </span>
@@ -553,12 +535,7 @@ const LessonRow = ({ lesson, planId }) => {
                     <button type="button" className="btn-close"
                         onClick={() => withConfirm(
                             `Odebrat místnost ${fac.label || fac.name || "Neznámá"}?`,
-                            async () => {
-                                try {
-                                    await deleteMistnost({ planitemId: lesson.id, facilityId: fac.id });
-                                    dispatch(removeFacilityLocal({ lessonId: lesson.id, facilityId: fac.id }));
-                                } catch (e) { console.error(e); }
-                            }
+                            () => handleRemoveFacility(fac.id)
                         )}
                     />
                 </span>
@@ -571,17 +548,13 @@ const LessonRow = ({ lesson, planId }) => {
                     <button type="button" className="btn-close"
                         onClick={() => withConfirm(
                             `Odebrat skupinu ${grp.abbreviation || grp.name || "Neznámá"}?`,
-                            async () => {
-                                try {
-                                    await deleteSkupinu({ planitemId: lesson.id, groupId: grp.id });
-                                    dispatch(removeGroupLocal({ lessonId: lesson.id, groupId: grp.id }));
-                                } catch (e) { console.error(e); }
-                            }
+                            () => handleRemoveGroup(grp.id)
                         )}
                     />
                 </span>
             ))}
-        </div>
+            </div>
+            
             {/* Ovládací tlačítka akcí */}
             <div className="ms-auto d-flex gap-2">
                 <button className="btn btn-sm btn-outline-primary" disabled={selectedTeachers.length === 0 || loadingInstructor} onClick={fvyucujici}>
