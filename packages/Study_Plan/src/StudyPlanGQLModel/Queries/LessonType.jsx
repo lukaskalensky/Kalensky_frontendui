@@ -1,6 +1,10 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// Dotaz na seznam všech typů výuky (přednáška, cvičení, seminář...). Používá se
+// na dvou místech: v AddLessonForm (StudyPlanDetail.jsx) pro výběr typu při
+// přidávání jedné lekce a v MediumEditableContent.jsx pro select typu u každé
+// naplánované lekce ve formuláři vytvoření/úpravy plánu.
 const ReadLessonTypeMutationStr = `
 query lessonTypePage($skip: Int, $limit: Int, $orderby: String, $where: LessonTypeInputFilter) {
   lessonTypePage(skip: $skip, limit: $limit, orderby: $orderby, where: $where) {
@@ -72,4 +76,5 @@ fragment LessonType on LessonTypeGQLModel {
 `;
 
 const ReadLessonTypeQuery = createQueryStrLazy(ReadLessonTypeMutationStr);
+// Redux thunk volaný jako `fetchLessonTypes({ limit: 1000 })`
 export const ReadLessonAsyncAction = createAsyncGraphQLAction2(ReadLessonTypeQuery);

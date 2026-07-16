@@ -6,9 +6,18 @@ import { useAsync } from "../../../../dynamic/src/Hooks";
 // Pokud je cesta jiná, upravte si ji prosím podle své struktury.
 import { ReadLessonAsyncAction } from "../Queries/LessonType"; 
 
+// Formulář použitý na stránkách "Vytvořit" / "Upravit" studijní plán (PageCreateItem,
+// PageUpdateItem). Kromě dvou základních polí (ID semestru, ID události) obsahuje editor
+// struktury plánu: seznam témat, u každého tématu seznam typů výuky s počtem hodin,
+// a tlačítko pro hromadné vygenerování N prázdných témat najednou (aby se nemusela
+// zakládat každé téma ručně jedno po druhém). Všechno se ukládá do `item.plannedTopics`
+// a posílá nahoru přes `onChange`, protože o samotné odeslání formuláře na server
+// se stará nadřazená Save/mutace komponenta (mimo tento soubor).
 export const MediumEditableContent = ({ item, onChange = (e) => null, onBlur = (e) => null, children }) => {
-    
+
     // ─── 1. NAČÍTÁNÍ TYPŮ VÝUKY Z DATABÁZE ───
+    // Typy výuky (přednáška/cvičení/seminář...) se do selectů natahují ze serveru,
+    // aby formulář nabízel jen typy, které backend skutečně zná
     const [lessonTypes, setLessonTypes] = useState([]);
     const [genCount, setGenCount] = useState(14); // Výchozí počet pro generátor
     const { run: fetchLessonTypes } = useAsync(ReadLessonAsyncAction, null, { deferred: true });
@@ -30,17 +39,23 @@ export const MediumEditableContent = ({ item, onChange = (e) => null, onBlur = (
     // Ukládáme to do item.plannedTopics, aby to pak zachytila nadřazená Save akce
     const topics = item?.plannedTopics || [];
 
+    // Jediné místo, přes které se mění seznam témat. Simuluje standardní DOM change
+    // event (`{ target: { id, name, value } }`), protože nadřazená komponenta
+    // očekává `onChange` ve stejném tvaru, jaký generuje běžný <input onChange>
+    // — díky tomu se plannedTopics zapisují stejnou cestou jako ostatní pole formuláře.
     const updateTopics = (newTopics) => {
-    onChange({ 
-        target: { 
+    onChange({
+        target: {
             id: "plannedTopics",     // <--- Změněno z 'name' na 'id'
-            name: "plannedTopics", 
-            value: newTopics 
-        } 
+            name: "plannedTopics",
+            value: newTopics
+        }
     });
 };
 
-    // Hromadné generování
+    // Vygeneruje najednou `genCount` prázdných témat, každé s jednou výchozí lekcí
+    // (typ = první typ výuky ze seznamu, počet hodin = 2), aby uživatel nemusel
+    // klikat "+ Přidat téma" ručně desetkrát za sebou u předmětů s hodně tématy
     const generateTopics = (e) => {
         e.preventDefault();
         const count = parseInt(genCount, 10) || 0;
@@ -51,9 +66,9 @@ export const MediumEditableContent = ({ item, onChange = (e) => null, onBlur = (
             newTopics.push({
                 id: Math.random().toString(36).substr(2, 9), // Unikátní ID pro UI
                 name: `Téma ${topics.length + i + 1}`,
-                lessons: defaultTypeId ? [{ 
-                    id: Math.random().toString(36).substr(2, 9), 
-                    lessontypeId: defaultTypeId, 
+                lessons: defaultTypeId ? [{
+                    id: Math.random().toString(36).substr(2, 9),
+                    lessontypeId: defaultTypeId,
                     count: 2 // Výchozí počet hodin v novém tématu
                 }] : []
             });
@@ -62,14 +77,18 @@ export const MediumEditableContent = ({ item, onChange = (e) => null, onBlur = (
     };
 
     // Práce s tématy
+    // Přidá jedno prázdné téma bez lekcí na konec seznamu
     const addTopic = (e) => {
         e.preventDefault();
         updateTopics([...topics, { id: Math.random().toString(36).substr(2, 9), name: `Nové téma`, lessons: [] }]);
     };
+    // Odebere téma podle jeho (dočasného, klientského) id
     const removeTopic = (id) => updateTopics(topics.filter(t => t.id !== id));
+    // Přejmenuje téma podle id, ostatní témata nechá beze změny
     const updateTopicName = (id, name) => updateTopics(topics.map(t => t.id === id ? { ...t, name } : t));
 
     // Práce s lekcemi uvnitř tématu
+    // Přidá do konkrétního tématu jednu novou lekci s výchozím typem výuky a počtem 1
     const addLesson = (e, topicId) => {
         e.preventDefault();
         const defaultTypeId = lessonTypes.length > 0 ? lessonTypes[0].id : "";
@@ -80,9 +99,11 @@ export const MediumEditableContent = ({ item, onChange = (e) => null, onBlur = (
             return t;
         }));
     };
+    // Odebere jednu lekci z daného tématu podle jejího id
     const removeLesson = (topicId, lessonId) => {
         updateTopics(topics.map(t => t.id === topicId ? { ...t, lessons: t.lessons.filter(l => l.id !== lessonId) } : t));
     };
+    // Změní jedno pole (typ výuky nebo počet hodin) u konkrétní lekce v daném tématu
     const updateLesson = (topicId, lessonId, field, value) => {
         updateTopics(topics.map(t => {
             if (t.id === topicId) {

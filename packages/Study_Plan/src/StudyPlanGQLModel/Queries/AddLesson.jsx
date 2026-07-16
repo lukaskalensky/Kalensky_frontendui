@@ -1,6 +1,10 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro vytvoření nové lekce (studyPlanLessonInsert) v rámci daného
+// tématu a plánu. Volá ji `handleSave` v AddLessonForm (StudyPlanDetail.jsx) i
+// ComplexInsertPlanAction v Mutations/Create.jsx (tam se voláním v cyklu zakládají
+// všechny naplánované lekce hned po vytvoření nového studijního plánu).
 const AddLessonMutationStr = `
 mutation studyPlanLessonInsert($planId: UUID!, $lessontypeId: UUID!, $topicId: UUID!, $eventId: UUID, $linkedWithId: UUID, $name: String, $nameEn: String, $length: Int, $order: Int, $id: UUID) {
   studyPlanLessonInsert(studyPlanLesson: {planId: $planId, lessontypeId: $lessontypeId, topicId: $topicId, eventId: $eventId, linkedWithId: $linkedWithId, name: $name, nameEn: $nameEn, length: $length, order: $order, id: $id}) {
@@ -267,4 +271,5 @@ fragment StudyPlanLessonGQLModelInsertError on StudyPlanLessonGQLModelInsertErro
 `;
 
 const AddLessonQuery = createQueryStrLazy(AddLessonMutationStr);
+// Redux thunk volaný jako `addLesson({ planId, topicId, name, lessontypeId, ... })`
 export const AddLessonAsyncAction = createAsyncGraphQLAction2(AddLessonQuery);

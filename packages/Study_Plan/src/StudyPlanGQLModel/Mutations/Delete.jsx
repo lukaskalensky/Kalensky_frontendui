@@ -10,6 +10,9 @@ import {
 const DefaultContent = MediumContent
 const MutationAsyncAction = DeleteAsyncAction
 
+// Mazání studijního plánu smí spustit jen role "studijní administrátor" (dřív tu
+// bylo obecné "superadmin", které v této appce nikdo neměl přiřazené, takže tlačítko
+// mazání bylo pro reálné uživatele nepoužitelné — proto sjednoceno s ostatními akcemi)
 const permissions = {
     oneOfRoles: ["studijní administrátor"],
     mode: "absolute",

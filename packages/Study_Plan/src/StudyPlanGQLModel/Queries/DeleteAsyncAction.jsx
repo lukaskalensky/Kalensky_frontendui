@@ -2,6 +2,10 @@ import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { LargeFragment } from "./Fragments";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro smazání celého studijního plánu (studyPlanDelete). Oproti
+// původní (generované) verzi jsme přidali volitelné `$examId`/`$eventId`, protože
+// backend je při mazání plánu s navázanou zkouškou/událostí vyžadoval, jinak mutace
+// vracela chybu. Volá ji DeleteButton z Mutations/Delete.jsx.
 const DeleteMutationStr = `
 mutation studyPlanDelete($id: UUID!, $lastchange: DateTime!, $examId: UUID, $eventId: UUID) {
   studyPlanDelete(studyPlan: {id: $id, lastchange: $lastchange, examId: $examId, eventId: $eventId}) {

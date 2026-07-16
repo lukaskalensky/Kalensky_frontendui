@@ -1,6 +1,9 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro odebrání JEDNÉ konkrétní skupiny z lekce
+// (studyPlanLessonRemoveGroup). Volá se z `handleRemoveGroup` v LessonRow
+// (StudyPlanDetail.jsx), vždy až po potvrzení v ConfirmModal.
 const DeleteGroupMutationStr = `
 mutation studyPlanLessonRemoveGroup($planitemId: UUID!, $groupId: UUID!) {
   studyPlanLessonRemoveGroup(studyPlanLesson: {planitemId: $planitemId, groupId: $groupId}) {
@@ -269,4 +272,5 @@ fragment Error on StudyPlanLessonGQLModelUpdateError {
 `;
 
 const DeleteGroupQuery = createQueryStrLazy(DeleteGroupMutationStr);
+// Redux thunk volaný jako `deleteSkupinu({ planitemId, groupId })`
 export const DeleteGroupAsyncAction = createAsyncGraphQLAction2(DeleteGroupQuery);

@@ -1,6 +1,9 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro odebrání JEDNOHO konkrétního učitele z lekce
+// (studyPlanLessonRemoveInstructor). Volá se z `handleRemoveInstructor` v LessonRow
+// (StudyPlanDetail.jsx) po potvrzení v ConfirmModal, aby se předešlo omylem smazání.
 const DeleteTeacherMutationStr = `
 mutation studyPlanLessonRemoveInstructor($planitemId: UUID!, $userId: UUID!) {
   studyPlanLessonRemoveInstructor(studyPlanLesson: {planitemId: $planitemId, userId: $userId}) {
@@ -268,4 +271,5 @@ fragment Error on StudyPlanLessonGQLModelUpdateError {
 `;
 
 const DeleteTeacherQuery = createQueryStrLazy(DeleteTeacherMutationStr);
+// Redux thunk volaný jako `deleteVyucujiciho({ planitemId, userId })`
 export const DeleteTeacherAsyncAction = createAsyncGraphQLAction2(DeleteTeacherQuery);

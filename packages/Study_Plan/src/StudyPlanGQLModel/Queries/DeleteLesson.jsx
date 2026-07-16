@@ -1,6 +1,9 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro smazání celé lekce (studyPlanLessonDelete). Vyžaduje kromě
+// id i `lastchange` — backend tím hlídá, že se neaktualizuje/nemaže zastaralá verze
+// záznamu (optimistické zamykání). Volá ji `fsmazat` v LessonRow (StudyPlanDetail.jsx).
 const DeleteLessonMutationStr = `
 mutation studyPlanLessonDelete($id: UUID!, $lastchange: DateTime!) {
   studyPlanLessonDelete(studyPlanLesson: {id: $id, lastchange: $lastchange}) {
@@ -267,4 +270,5 @@ fragment StudyPlanLessonGQLModelDeleteError on StudyPlanLessonGQLModelDeleteErro
 `;
 
 const DeleteLessonQuery = createQueryStrLazy(DeleteLessonMutationStr);
+// Redux thunk volaný jako `deleteLesson({ id, lastchange })`
 export const DeleteLessonAsyncAction = createAsyncGraphQLAction2(DeleteLessonQuery);

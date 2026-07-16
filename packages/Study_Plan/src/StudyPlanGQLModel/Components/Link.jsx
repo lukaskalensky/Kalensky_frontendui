@@ -17,6 +17,9 @@ export const MyNewPageURI = `${modelURI}/moje-nova-stranka/${idParam}`
 export const ReadItemURI = `${LinkURI}${idParam}`;
 export const UpdateItemURI = `${UpdateURI}${idParam}`;
 export const DeleteItemURI = `${DeleteURI}${idParam}`;
+// Náhradní URL pro entity, které NEJSOU typu StudyPlanGQLModel (např. Semestr, Lekce,
+// Uživatel, Událost), ale přesto se přes tenhle Link komponent odkazují (viz níže).
+// Bez toho by odkaz na jiný typ entity vedl na neexistující "/StudyPlanGQLModel/view/:id".
 export const OstatniURI = `${modelURI}/vseostatni/view/`;
 export const OstatniURIPage = `${OstatniURI}${idParam}`;
 //fetch, local storage prohlizes, react redux - vlozit informace, hook - ReadAsyncAction - vezne queris, zakomponovaan v PageBase
@@ -48,8 +51,14 @@ export const OstatniURIPage = `${OstatniURI}${idParam}`;
  *
  * @see ProxyLink - The base component used for rendering the link.
  */
+// Tenhle Link se ve StudyPlanDetail.jsx používá i na entity, které nejsou plán
+// samotný (např. Link item={semester}, Link item={teacher}, Link item={item?.exam}).
+// Aby to nespadlo na chybnou URL, kontroluje se __typename: pokud entita NENÍ
+// StudyPlanGQLModel, přesměruje se na obecnou "vseostatni" URL (OstatniURI) místo
+// URL specifické pro studijní plán. Text odkazu se bere v pořadí fullname → name → id,
+// podle toho, co daný typ entity zrovna má.
 export const Link = ({ item, LinkURI: LinkURI_ = LinkURI, action="view", children, ...props}) => {
-    
+
     if (item?.__typename !== 'StudyPlanGQLModel') {
         LinkURI_ = OstatniURI;
        const targetURI = LinkURI_.replace('view', action);

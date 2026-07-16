@@ -1,6 +1,10 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro přiřazení JEDNÉ konkrétní skupiny k JEDNÉ lekci
+// (studyPlanLessonAddGroup). Stejný vzor jako AddInstructor.jsx/AddRoom.jsx — bez
+// batch varianty na backendu, proto se v `fskupina` (LessonRow, StudyPlanDetail.jsx)
+// volá v cyklu pro každou vybranou skupinu zvlášť.
 const AddGroupMutationStr = `
 mutation studyPlanLessonAddGroup($planitemId: UUID!, $groupId: UUID!) {
   studyPlanLessonAddGroup(studyPlanLesson: {planitemId: $planitemId, groupId: $groupId}) {
@@ -268,4 +272,5 @@ fragment Error on StudyPlanLessonGQLModelUpdateError {
 `;
 
 const AddGroupQuery = createQueryStrLazy(AddGroupMutationStr);
+// Redux thunk volaný jako `assignGroup({ planitemId, groupId })` v LessonRow
 export const AddGroupAsyncAction = createAsyncGraphQLAction2(AddGroupQuery);

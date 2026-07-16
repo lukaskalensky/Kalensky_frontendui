@@ -1,6 +1,9 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro odebrání JEDNÉ konkrétní místnosti z lekce
+// (studyPlanLessonRemoveFacility). Volá se z `handleRemoveFacility` v LessonRow
+// (StudyPlanDetail.jsx), vždy až po potvrzení v ConfirmModal.
 const DeleteRoomMutationStr = `
 mutation studyPlanLessonRemoveFacility($planitemId: UUID!, $facilityId: UUID!) {
   studyPlanLessonRemoveFacility(studyPlanLesson: {planitemId: $planitemId, facilityId: $facilityId}) {
@@ -269,4 +272,5 @@ fragment Error on StudyPlanLessonGQLModelUpdateError {
 `;
 
 const DeleteRoomQuery = createQueryStrLazy(DeleteRoomMutationStr);
+// Redux thunk volaný jako `deleteMistnost({ planitemId, facilityId })`
 export const DeleteRoomAsyncAction = createAsyncGraphQLAction2(DeleteRoomQuery);

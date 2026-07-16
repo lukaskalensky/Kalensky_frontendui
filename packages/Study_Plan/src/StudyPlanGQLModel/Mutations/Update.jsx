@@ -11,6 +11,8 @@ import { UpdateAsyncAction } from "../Queries";
 const DefaultContent = (props) => <MediumEditableContent {...props} />
 const mutationAsyncAction = UpdateAsyncAction
 
+// Úprava plánu smí stejně jako Create/Delete jen role "studijní administrátor"
+// (sjednoceno napříč všemi mutacemi místo neexistující role "superadmin")
 const permissions = {
     oneOfRoles: ["studijní administrátor"],
     mode: "absolute",

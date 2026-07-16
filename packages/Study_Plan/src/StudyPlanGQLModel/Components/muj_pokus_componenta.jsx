@@ -5,6 +5,12 @@ import { SearchRoomAsyncAction } from '../Queries/SearchRoomAsyncAction';
 import { SelectionContext } from './SelectionContext';
 import { useContext } from 'react';
 
+// Jedna "karta" pro výběr entit (učitelů/místností/skupin) — obsahuje políčko
+// EntityLookup pro vyhledání a přidání entity a pod ním seznam už vybraných
+// entit jako odebiratelné odznaky. `asyncAction` určuje, co se hledá (jiná akce
+// pro učitele, jinou pro místnosti, jinou pro skupiny — viz Queries/Search*AsyncAction),
+// `selectedList`/`onAdd`/`onRemove` přicházejí z SelectionContextu přes rodičovskou
+// komponentu MyCustomWidget, takže tahle karta si sama žádný stav nepamatuje.
 const EntityLookupCard = ({ title, asyncAction, selectedList, onAdd, onRemove }) => {
 
     return (
@@ -51,6 +57,11 @@ const EntityLookupCard = ({ title, asyncAction, selectedList, onAdd, onRemove })
     );
 };
 
+// Hlavní widget s trojicí EntityLookupCard vedle sebe (učitelé / místnosti / skupiny).
+// Sám o sobě neřeší žádnou logiku výběru — jen vytáhne aktuální seznamy a add/remove
+// funkce ze SelectionContextu (naplněného v MujPokusPage) a předá je dál třem kartám.
+// Vybrané entity odsud pak čte LessonRow ve StudyPlanDetail.jsx, když se mají hromadně
+// přiřadit ke konkrétní lekci.
 export const MyCustomWidget = ({ item }) => {
 
     const {

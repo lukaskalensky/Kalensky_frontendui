@@ -30,6 +30,9 @@ import CustomCreateDialog from './CreateStudyPlan';
 
 
 // ── 1. POMOCNÁ KOMPONENTA PRO ŘÁDEK V INFO PANELU ──
+// Bere `label` (text popisku vlevo) a `children` (obsah vpravo, např. odkaz nebo text)
+// a rozloží je do dvou bootstrapových sloupců (4 + 8 z 12), aby všechny řádky v panelu
+// měly popisek zarovnaný na stejné šířce. Používá se opakovaně níže v InfoPanel.
 const InfoRow = ({ label, children }) => (
     <div className="row mb-2 align-items-start">
         <div className="col-4 fw-semibold text-dark">{label}</div>
@@ -38,7 +41,10 @@ const InfoRow = ({ label, children }) => (
 )
 
 // ── 2a. SEZNAM PŘEDVÍDANÝCH VYUČUJÍCÍCH ──
+// Spočítá, kolik lekcí učí každý vyučující napříč všemi lekcemi plánu,
+// a vypíše je jako přehledový seznam s počtem lekcí u každého jména
 const ExpectedTeachers = ({ lessons }) => {
+    // teacherMap: { id_ucitele: { ...udaje_ucitele, lessonCount: pocet_lekci } }
     const teacherMap = {};
     (lessons || []).forEach(lesson => {
         (lesson.instructors || []).forEach(inst => {
@@ -49,6 +55,7 @@ const ExpectedTeachers = ({ lessons }) => {
         });
     });
 
+    // Převod mapy zpět na pole, se kterým se dá iterovat v JSX
     const teachers = Object.values(teacherMap);
 
     return (
@@ -73,6 +80,10 @@ const ExpectedTeachers = ({ lessons }) => {
 };
 
 // ── 2. INFO PANEL (LEVÁ ČÁST DETAILU PLÁNU) ──
+// Levý postranní panel s metadaty studijního plánu (semestr, období, zkouška,
+// kdo/kdy vytvořil a naposledy změnil) a tlačítky pro vytvoření nového / smazání aktuálního plánu.
+// Předmět a číslo semestru se čtou vnořeně (item.semester.subject), takže se hlídá
+// optional chaining (?.), aby stránka nespadla, když nějaká relace v datech chybí.
 const InfoPanel = ({ item }) => {
     const semester = item?.semester
     const subjectName = semester?.subject?.name || semester?.subject?.nameEn || null
@@ -180,9 +191,14 @@ const InfoPanel = ({ item }) => {
 }
 
 // ── 3. HLAVIČKA TÉMATU (NÁZEV + BADGES S POČTY) ──
+// Ukazuje název tématu a vedle něj odznaky typu "2/3 Přednáška", kde první číslo je,
+// kolik lekcí daného typu už reálně existuje (actual, spočítáno z pole `lessons`,
+// tedy skutečně vytvořených lekcí), a druhé je, kolik jich má podle tématu být (planned,
+// z `topic.lessons`, což je naplánovaný počet uložený u tématu). Pokud plán pro daný typ
+// vůbec neexistuje, ukáže se jen "Nx" bez lomítka.
 const TopicHeader = ({ topic, lessons }) => {
-    
-    // 1. PLÁNOVANÝ STAV (Jmenovatel) 
+
+    // 1. PLÁNOVANÝ STAV (Jmenovatel)
     // Projdeme šablonu (topic.lessons) a sečteme 'count' pro jednotlivé typy.
     const plannedStats = (topic?.lessons || []).reduce((acc, l) => {
         const typeName = l.type?.name || l.type?.nameEn;
@@ -192,12 +208,12 @@ const TopicHeader = ({ topic, lessons }) => {
         return acc;
     }, {});
 
-    // 2. SKUTEČNÝ STAV (Čitatel) 
+    // 2. SKUTEČNÝ STAV (Čitatel)
     // Projdeme reálně vytvořené lekce v tabulce (lessons) a za každou přičteme 1.
     const actualStats = (lessons || []).reduce((acc, l) => {
         const typeName = l.lessontype?.name || l.lessontype?.nameEn;
         if (typeName) {
-            acc[typeName] = (acc[typeName] || 0) + 1; 
+            acc[typeName] = (acc[typeName] || 0) + 1;
         }
         return acc;
     }, {});
@@ -205,7 +221,7 @@ const TopicHeader = ({ topic, lessons }) => {
     // 3. SLOUČENÍ A VYKRESLENÍ
     // Získáme unikátní názvy typů z obou objektů (aby se vypsaly i ty, kde je zatím 0/X)
     const allTypeNames = Array.from(new Set([
-        ...Object.keys(plannedStats), 
+        ...Object.keys(plannedStats),
         ...Object.keys(actualStats)
     ]));
 
@@ -233,6 +249,12 @@ const TopicHeader = ({ topic, lessons }) => {
 }
 
 // ── 4. FORMULÁŘ PRO PŘIDÁNÍ LEKCE ──
+// Malý formulář v hlavičce tématu: textové pole na název nové lekce, select s typem
+// výuky a tlačítko Uložit. `lessonTypes` chodí jako prop shora (StudyPlanDetail je
+// natáhne jednou pro celý plán a posílá dolů přes TopicRow) — dřív si je nezávisle
+// natahoval každý AddLessonForm zvlášť, což znamenalo jeden zbytečný GraphQL dotaz
+// na typy výuky za každé téma v plánu. Po uložení lekce se výsledek rovnou zapíše
+// do Reduxu (addLessonLocal), takže se nečeká na refetch celého plánu ze serveru.
 const AddLessonForm = ({ topicId, planId, lessonTypes }) => {
 
     const dispatch = useDispatch();
@@ -240,20 +262,28 @@ const AddLessonForm = ({ topicId, planId, lessonTypes }) => {
     const [lessonName, setLessonName] = useState("");
     const [selectedLessonTypeId, setSelectedLessonTypeId] = useState("");
 
+    // { deferred: true } = akce se nespustí sama, ale až když zavoláme vrácenou funkci `run`
     const { run: addLesson, loading } = useAsync(AddLessonAsyncAction, null, { deferred: true });
 
+    // Při prvním vykreslení komponenty stáhne seznam všech typů výuky (limit 1000, aby
+    // se vešly všechny) a přednastaví select na první z nich, ať formulář nezůstane prázdný
     useEffect(() => {
         if (lessonTypes && lessonTypes.length > 0 && !selectedLessonTypeId) {
             setSelectedLessonTypeId(lessonTypes[0].id);
         }
     }, [lessonTypes, selectedLessonTypeId]);
 
+    // Po kliknutí na "Uložit lekci" pošle na server insert mutaci s vyplněnými daty.
+    // Pokud typ výuky ještě nedorazil ze serveru (select je prázdný), akci zablokuje
+    // hláškou, protože bez lessontypeId by insert na backendu selhal. Po úspěšném
+    // uložení vyčistí textové pole a znovu natáhne celý plán (reloadPlan), aby se nová
+    // lekce hned zobrazila v seznamu pod tématem.
     const handleSave = async () => {
         if (!selectedLessonTypeId) {
             alert("Počkejte na načtení typů výuky nebo nějaký vyberte.");
             return;
         }
-       
+
         const insertPayload = {
             planId,
             topicId,
@@ -335,6 +365,10 @@ const AddLessonForm = ({ topicId, planId, lessonTypes }) => {
 }
 
 // ── 5a. POTVRZOVACÍ DIALOG (PREVENCE MISS-CLICK) ──
+// Znovupoužitelné modální okno "Opravdu smazat X?". Nemá vlastní stav — jen
+// vykresluje to, co mu řekne rodič (`show`, `message`) a volá zpět jeho callbacky.
+// Kliknutí na tmavé pozadí (onClick na vnějším divu) se chová jako Zrušit, ale kliknutí
+// dovnitř dialogu se zastaví přes stopPropagation, aby proklik pozadím dialog nezavřel omylem.
 const ConfirmModal = ({ show, message, onConfirm, onCancel }) => {
     if (!show) return null;
     return (
@@ -363,12 +397,19 @@ const ConfirmModal = ({ show, message, onConfirm, onCancel }) => {
 };
 
 // ── 5. ŘÁDEK JEDNÉ LEKCE (S AKCEMI PRO CONFIG) ──
-
+// Jeden řádek konkrétní lekce v tématu. Čte aktuálně vybrané (ale ještě nepřiřazené)
+// učitele/místnosti/skupiny ze sdíleného SelectionContextu (viz SelectionContext.jsx a
+// MyCustomWidget v muj_pokus_componenta.jsx, kde se výběr sestavuje) a umožňuje je
+// tlačítkem přiřadit k této konkrétní lekci. Zároveň ukazuje, co už je přiřazeno,
+// a dovoluje to zase odebrat nebo celou lekci smazat — vždy s potvrzovacím dialogem.
 const LessonRow = ({ lesson, planId }) => {
     const { selectedTeachers = [], selectedRooms = [], selectedGroups = [] } = useContext(SelectionContext);
 
     const dispatch = useDispatch();
 
+    // Async akce pro přiřazení (Add*) a odebrání (Delete*) učitele/místnosti/skupiny
+    // k/od této lekce — každá volá jinou GraphQL mutaci, protože backend nemá
+    // jednu společnou "batch" mutaci pro všechny tři typy najednou
     const { run: assignInstructor, loading: loadingInstructor } = useAsync(AddInstructorAsyncAction, null, { deferred: true });
     const { run: assignFacility, loading: loadingFacility } = useAsync(AddRoomAsyncAction, null, { deferred: true });
     const { run: assignGroup, loading: loadingGroup } = useAsync(AddGroupAsyncAction, null, { deferred: true });
@@ -378,9 +419,16 @@ const LessonRow = ({ lesson, planId }) => {
     const { run: deleteMistnost } = useAsync(DeleteRoomAsyncAction, null, { deferred: true });
     const { run: deleteSkupinu } = useAsync(DeleteGroupAsyncAction, null, { deferred: true });
 
+    // Stav potvrzovacího dialogu: co má v sobě zobrazit a jakou akci spustit po potvrzení.
+    // Díky tomu má LessonRow jen JEDEN modal pro všechny druhy mazání (učitel/místnost/
+    // skupina/lekce) místo čtyř samostatných dialogů.
     const [confirmState, setConfirmState] = useState({ show: false, message: "", onConfirm: null });
+    // Otevře dialog s danou hláškou a zapamatuje si, co se má stát po kliknutí na "Ano"
     const withConfirm = (message, action) => setConfirmState({ show: true, message, onConfirm: action });
+    // Zavře dialog a vynuluje jeho stav
     const closeConfirm = () => setConfirmState({ show: false, message: "", onConfirm: null });
+    // Zavolá se při kliknutí na "Ano, smazat": nejdřív dialog zavře, pak teprve spustí
+    // uloženou akci (pořadí je důležité, aby dialog nezůstal viset, kdyby akce chvíli trvala)
     const handleConfirm = async () => { closeConfirm(); if (confirmState.onConfirm) await confirmState.onConfirm(); };
 
     // Přidá VŠECHNY vybrané učitele k lekci najednou (přeskočí ty, co už u ní jsou)
@@ -397,6 +445,9 @@ const LessonRow = ({ lesson, planId }) => {
         }
     };
 
+    // Odebere jednoho konkrétního učitele z lekce: pošle mutaci na server a po úspěchu
+    // rovnou odečte učitele i z lokálního Redux stavu (removeInstructorLocal), aby se
+    // UI aktualizovalo okamžitě a nemuselo se čekat na nové načtení celého plánu ze serveru
     const handleRemoveInstructor = async (instructorId) => {
         try {
             await deleteVyucujiciho({ planitemId: lesson.id, userId: instructorId });
@@ -418,6 +469,7 @@ const LessonRow = ({ lesson, planId }) => {
         }
     };
 
+    // Odebere jednu konkrétní místnost z lekce (mutace na server + odečtení z Redux stavu)
     const handleRemoveFacility = async (facilityId) => {
         try {
             await deleteMistnost({ planitemId: lesson.id, facilityId: facilityId });
@@ -439,6 +491,7 @@ const LessonRow = ({ lesson, planId }) => {
         }
     };
 
+    // Odebere jednu konkrétní skupinu z lekce (mutace na server + odečtení z Redux stavu)
     const handleRemoveGroup = async (groupId) => {
         try {
             await deleteSkupinu({ planitemId: lesson.id, groupId: groupId });
@@ -446,6 +499,10 @@ const LessonRow = ({ lesson, planId }) => {
         } catch (err) { console.error(err); }
     };
 
+    // Smaže celou lekci (posílá se i `lastchange`, protože backend mutaci pro smazání
+    // vyžaduje kvůli optimistickému zamykání — kdyby lekci mezitím upravil někdo jiný,
+    // mutace by na neshodě lastchange selhala místo přepsání cizí změny). Po úspěchu
+    // se lekce odstraní i z Redux stavu, aby zmizela z obrazovky bez reloadu stránky.
     const fsmazat = async () => {
         try {
             await deleteLesson({ id: lesson.id, lastchange: lesson.lastchange });
@@ -549,6 +606,11 @@ const LessonRow = ({ lesson, planId }) => {
 };
 
 // ── 6. ORECHESTRAČNÍ KOMPONENTA PRO JEDNO TÉMA ──
+// Skládá dohromady hlavičku tématu (TopicHeader), formulář pro přidání nové lekce
+// (AddLessonForm) a pod nimi seznam všech lekcí patřících k tomuto tématu (LessonRow).
+// Sekci s lekcemi vykreslí jen tehdy, když nějaké existují, aby prázdná témata
+// zbytečně nezabírala místo prázdným paddingem. `lessonTypes` se sem jen protlačuje
+// dál do AddLessonForm — samotné natažení dělá až nadřazený StudyPlanDetail.
 const TopicRow = ({ topic, lessons, planId, lessonTypes }) => {
     return (
         <div className="border-bottom border-danger border-opacity-25">
@@ -576,14 +638,23 @@ const TopicRow = ({ topic, lessons, planId, lessonTypes }) => {
 }
 
 // ── 7. HLAVNÍ EXPORTOVANÁ KOMPONENTA DETAILU ──
-
+// Vstupní bod celého detailu studijního plánu, importovaný a použitý na stránce
+// PageReadItem/PageReadItemEx. Kombinuje data z props (`item`, načtená přes GraphQL
+// query při otevření stránky) s živým stavem v Reduxu (studyPlanSlice), protože
+// LessonRow výše mění stav lekcí lokálně přes dispatch (add/remove instruktora,
+// místnosti, skupiny, mazání lekce) — tyto lokální změny se musí promítnout hned
+// do zobrazení, bez čekání na refetch dat ze serveru.
 export const StudyPlanDetail = ({ item: incomingItem, children }) => {
     const dispatch = useDispatch();
 
+    // Typy výuky (přednáška/cvičení/...) se natahují JEDNOU tady, na úrovni celého
+    // plánu, a posílají se dolů do každého TopicRow/AddLessonForm jako prop
+    // `lessonTypes` — dřív si je nezávisle natahoval každý AddLessonForm zvlášť, což
+    // znamenalo jeden zbytečný GraphQL dotaz na typy výuky za každé téma v plánu.
     const [globalLessonTypes, setGlobalLessonTypes] = useState([]);
     const { run: fetchLessonTypes } = useAsync(ReadLessonAsyncAction, null, { deferred: true });
 
-    // 2. PŘIDÁNO: Načtení proběhne pouze jednou při mountování hlavní komponenty
+    // Načtení proběhne pouze jednou při mountování hlavní komponenty
     useEffect(() => {
         const loadTypes = async () => {
             try {
@@ -597,31 +668,34 @@ export const StudyPlanDetail = ({ item: incomingItem, children }) => {
         loadTypes();
     }, []);
 
-    // Načtení dat z props do Reduxu při prvním renderu
+    // Jakmile přijdou nová data z props (např. po prvním načtení stránky nebo
+    // po ručním refetchi), uloží se do Reduxu jako výchozí/aktuální stav plánu
     useEffect(() => {
         if (incomingItem) {
             dispatch(setStudyPlan(incomingItem));
         }
     }, [incomingItem, dispatch]);
 
-    // Odebírání živého stavu z Reduxu
+    // Čtení aktuálního (živého) stavu plánu z Reduxu — sem se promítají lokální
+    // úpravy z LessonRow (přidání/odebrání učitele, místnosti, skupiny, smazání lekce)
     const reduxItem = useSelector((state) => state.studyPlan.item);
 
-    // Pokud ještě nemáme data v Reduxu, použijeme fallback z props
+    // Dokud Redux žádný plán nemá (např. hned po přechodu na stránku, než proběhne
+    // efekt výše), použije se rovnou to, co přišlo v props, aby stránka nebyla prázdná
     const activeItem = reduxItem || incomingItem;
 
     const semester = activeItem?.semester;
     const lessons = activeItem?.lessons || []; // Tohle jsou ty "živé" vytvořené lekce
-    
-    // ==========================================
-    // TADY JE TO MASIVNÍ ZJEDNODUŠENÍ
-    // Témata bereme POUZE z activeItem.semester.topics.
-    // Nemusíme spojovat nic s lekcemi ani odstraňovat duplicity!
-    // ==========================================
+
+    // Témata bereme přímo z activeItem.semester.topics — nemusíme je nijak spojovat
+    // s lekcemi ani řešit duplicity, lekce se k nim přiřadí až níže podle topicId
     const semesterTopics = semester?.topics || [];
+    // Seřadí témata podle jejich pořadí (order), aby se vždy zobrazovala ve stejném
+    // pořadí, v jakém byla naplánována, a ne v pořadí, v jakém dorazila ze serveru
     const sortedTopics = [...semesterTopics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-    // 4. Rozřazení "živých" lekcí k tématům (toto potřebujeme, abychom je mohli poslat do TopicRow jako čitatele)
+    // Přerozdělí ploché pole všech lekcí plánu do skupin podle topicId, aby je
+    // šlo v JSX níže snadno vypsat pod správné téma: { topicId: [lekce, lekce, ...] }
     const lessonsByTopic = lessons.reduce((acc, l) => {
         (acc[l.topicId] = acc[l.topicId] || []).push(l);
         return acc;

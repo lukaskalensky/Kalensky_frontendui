@@ -3,6 +3,11 @@ import { LargeFragment } from "./Fragments";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
 
+// GraphQL mutace pro založení nového studijního plánu (studyPlanInsert). Oproti
+// původní (generované) verzi jsme přidali parametr `$lessons` (pole rovnou
+// vkládaných lekcí) a `eventId` udělali povinný, protože bez navázané události
+// plán v UI nedávalo smysl zobrazit. Volá se z Mutations/Create.jsx
+// (CustomCreateDialog → handleOk) jako první krok při vytváření nového plánu.
 const InsertMutationStr = `
 mutation studyPlanInsert($semesterId: UUID!, $eventId: UUID!, $id: UUID, $examId: UUID, $lessons: [StudyPlanLessonInsertGQLModel!]) {
   studyPlanInsert(studyPlan: {semesterId: $semesterId, eventId: $eventId, id: $id, examId: $examId, lessons: $lessons}) {

@@ -1,6 +1,10 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro přiřazení JEDNÉ konkrétní místnosti (facility) k JEDNÉ lekci
+// (studyPlanLessonAddFacility). Stejně jako u učitelů (viz AddInstructor.jsx) tu není
+// batch varianta, takže hromadné přiřazení víc místností najednou (`fmistnost` v
+// LessonRow, StudyPlanDetail.jsx) volá tuhle akci v cyklu pro každou vybranou místnost.
 const AddRoomMutationStr = `
 mutation studyPlanLessonAddFacility($planitemId: UUID!, $facilityId: UUID!) {
   studyPlanLessonAddFacility(studyPlanLesson: {planitemId: $planitemId, facilityId: $facilityId}) {
@@ -268,4 +272,5 @@ fragment Error on StudyPlanLessonGQLModelUpdateError {
 `;
 
 const AddRoomQuery = createQueryStrLazy(AddRoomMutationStr);
+// Redux thunk volaný jako `assignFacility({ planitemId, facilityId })` v LessonRow
 export const AddRoomAsyncAction = createAsyncGraphQLAction2(AddRoomQuery);

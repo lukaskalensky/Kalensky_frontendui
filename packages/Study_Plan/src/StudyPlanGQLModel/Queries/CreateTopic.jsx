@@ -1,6 +1,10 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro vytvoření nového tématu (topicInsert) v rámci semestru.
+// Používá ji ComplexInsertPlanAction v Mutations/Create.jsx, kde se pro každé téma
+// zadané ve formuláři (MediumEditableContent) nejdřív založí téma touto mutací,
+// a teprve poté (z návratového ID) se k němu přidají jeho lekce.
 const CreateTopicMutationStr = `
 mutation topicInsert($semesterId: UUID, $id: UUID, $name: String, $nameEn: String, $order: Int, $description: String, $lessons: [LessonInsertGQLModel!]) {
   topicInsert(topic: {semesterId: $semesterId, id: $id, name: $name, nameEn: $nameEn, order: $order, description: $description, lessons: $lessons}) {
@@ -139,4 +143,5 @@ fragment TopicGQLModelInsertError on TopicGQLModelInsertError {
 `;
 
 const CreateTopicQuery = createQueryStrLazy(CreateTopicMutationStr);
+// Redux thunk volaný jako `createTopic({ semesterId, name, order })`
 export const CreateTopicAsyncAction = createAsyncGraphQLAction2(CreateTopicQuery);

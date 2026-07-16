@@ -2,6 +2,8 @@ import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared"
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2"
 import { reduceToFirstEntity } from "../../../../dynamic/src/Store"
 
+// Hledání místností/prostor (facilityPage) pro EntityLookup v EntityLookupCard
+// (muj_pokus_componenta.jsx) — stejný vzor jako SearchAsyncAction.jsx.
 const SearchRoomQueryStr = `
 query SearchRoomQuery($skip: Int, $limit: Int, $pattern: String) {
   result: facilityPage(skip: $skip, limit: $limit, where: {name: {_ilike: $pattern}}) {

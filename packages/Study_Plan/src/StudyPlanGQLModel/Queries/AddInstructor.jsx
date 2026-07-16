@@ -1,6 +1,12 @@
 import { createQueryStrLazy } from "@hrbolek/uoisfrontend-gql-shared";
 import { createAsyncGraphQLAction2 } from "../../../../dynamic/src/Core/createAsyncGraphQLAction2";
 
+// GraphQL mutace pro přiřazení JEDNOHO konkrétního učitele k JEDNÉ konkrétní lekci
+// (studyPlanLessonAddInstructor). Backend nemá variantu, která by přijala pole ID
+// učitelů najednou, proto se při hromadném přiřazení (viz `fvyucujici` v
+// LessonRow, StudyPlanDetail.jsx) tahle akce volá v cyklu, jednou pro každého
+// vybraného učitele. Zbytek souboru (fragmenty User/RBACObject/Event/...) jen
+// popisuje, jaká data se mají v odpovědi vrátit zpátky z GraphQL serveru.
 const AddInstructorMutationStr = `
 mutation studyPlanLessonAddInstructor($planitemId: UUID!, $userId: UUID!) {
   studyPlanLessonAddInstructor(studyPlanLesson: {planitemId: $planitemId, userId: $userId}) {
@@ -267,4 +273,6 @@ fragment Error on StudyPlanLessonGQLModelUpdateError {
 `;
 
 const AddInstructorQuery = createQueryStrLazy(AddInstructorMutationStr);
+// Redux thunk, který se dá zavolat jako `assignInstructor({ planitemId, userId })`
+// (viz useAsync(AddInstructorAsyncAction, ...) v LessonRow)
 export const AddInstructorAsyncAction = createAsyncGraphQLAction2(AddInstructorQuery);

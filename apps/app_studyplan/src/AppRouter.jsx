@@ -14,6 +14,9 @@ import { SemesterGQLModelRouterSegments } from "../../../packages/granting2/src/
 import { TopicGQLModelRouterSegments } from "../../../packages/granting2/src/TopicGQLModel/Pages/RouterSegment";
 import { StudyPlanGQLModelRouterSegments } from "../../../packages/granting2/src/StudyPlanGQLModel/Pages/RouterSegment";
 
+// Společný layout pro všechny stránky appky: navigační lišta nahoře, pod ní historie
+// navigace (tlačítko zpět/breadcrumby) a `Outlet` je místo, kam react-router vloží
+// obsah aktuálně otevřené route (viz `children` v `Routes` níže)
 const AppLayout = () => (
     <NavigationHistoryProvider>
         <AppNavbar />
@@ -22,6 +25,10 @@ const AppLayout = () => (
     </NavigationHistoryProvider>
 );
 
+// Definice všech tras aplikace. `StudyplanGQLModelRouterSegments` (naše vlastní
+// route segmenty pro balíček Study_Plan, viz Pages/RouterSegment.jsx) jsou
+// záměrně první v poli, aby v případě shodné cesty s obecnými segmenty z
+// granting2 (StudyPlanGQLModelRouterSegments) měly přednost naše vlastní stránky.
 const Routes = [
     {
         path: "/",
@@ -40,4 +47,5 @@ const Routes = [
 
 const router = createBrowserRouter(Routes);
 
+// Kořenová komponenta appky — vloží se do main.jsx a spustí celé routování
 export const AppRouter = () => <RouterProvider router={router} />;

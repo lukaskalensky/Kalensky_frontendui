@@ -1,8 +1,16 @@
+// Redux slice, který drží "živou" kopii aktuálně otevřeného studijního plánu.
+// Existuje proto, že LessonRow (StudyPlanDetail.jsx) potřebuje po přidání/odebrání
+// učitele/místnosti/skupiny nebo po smazání lekce hned aktualizovat UI, aniž by čekal
+// na nové stažení celého plánu ze serveru (refetch) — místo toho se po úspěšné
+// mutaci rovnou upraví tenhle stav přes dispatch(add/removeXLocal(...)).
+// Jednotlivé reducery využívají Immer (zabudovaný v @reduxjs/toolkit), takže i když
+// vypadají, že mutují `state` přímo (push, filter s přiřazením), ve skutečnosti se
+// pod kapotou vytváří nový immutabilní stav.
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
     // Zde je uložený celý studijní plán, který si na začátku jednou stáhnete z DB
-    item: null, 
+    item: null,
     isLoading: false,
     error: null,
 };
@@ -17,6 +25,8 @@ const studyPlanSlice = createSlice({
         },
 
         // ── LOKÁLNÍ UPDATY PRO UČITELE ──
+        // Najde lekci podle id a přidá jí do pole instructors nového učitele
+        // (voláno hned po úspěšné AddInstructorAsyncAction mutaci v LessonRow)
         addInstructorLocal: (state, action) => {
             const { lessonId, teacher } = action.payload;
             const lesson = state.item?.lessons?.find(l => l.id === lessonId);
@@ -28,10 +38,11 @@ const studyPlanSlice = createSlice({
                 lesson.instructors.push(teacher);
             }
         },
+        // Odebere učitele z pole instructors dané lekce podle jeho id
         removeInstructorLocal: (state, action) => {
             const { lessonId, teacherId } = action.payload;
             const lesson = state.item?.lessons?.find(l => l.id === lessonId);
-            
+
             if (lesson && lesson.instructors) {
                 // Vyfiltrujeme učitele, jehož ID chceme smazat
                 lesson.instructors = lesson.instructors.filter(inst => inst.id !== teacherId);
@@ -39,6 +50,7 @@ const studyPlanSlice = createSlice({
         },
 
         // ── LOKÁLNÍ UPDATY PRO MÍSTNOSTI ──
+        // Přidá místnost do pole facilities dané lekce (stejný vzor jako u učitelů)
         addFacilityLocal: (state, action) => {
             const { lessonId, facility } = action.payload;
             const lesson = state.item?.lessons?.find(l => l.id === lessonId);
@@ -48,16 +60,18 @@ const studyPlanSlice = createSlice({
                 lesson.facilities.push(facility);
             }
         },
+        // Odebere místnost z pole facilities dané lekce podle jejího id
         removeFacilityLocal: (state, action) => {
             const { lessonId, facilityId } = action.payload;
             const lesson = state.item?.lessons?.find(l => l.id === lessonId);
-            
+
             if (lesson && lesson.facilities) {
                 lesson.facilities = lesson.facilities.filter(fac => fac.id !== facilityId);
             }
         },
 
         // ── LOKÁLNÍ UPDATY PRO SKUPINY ──
+        // Přidá skupinu do pole studyGroups dané lekce (stejný vzor jako u učitelů/místností)
         addGroupLocal: (state, action) => {
             const { lessonId, group } = action.payload;
             const lesson = state.item?.lessons?.find(l => l.id === lessonId);
@@ -67,16 +81,18 @@ const studyPlanSlice = createSlice({
                 lesson.studyGroups.push(group);
             }
         },
+        // Odebere skupinu z pole studyGroups dané lekce podle jejího id
         removeGroupLocal: (state, action) => {
             const { lessonId, groupId } = action.payload;
             const lesson = state.item?.lessons?.find(l => l.id === lessonId);
-            
+
             if (lesson && lesson.studyGroups) {
                 lesson.studyGroups = lesson.studyGroups.filter(grp => grp.id !== groupId);
             }
         },
 
         // ── LOKÁLNÍ UPDATE PRO SMAZÁNÍ CELÉ LEKCE ──
+        // Odstraní celou lekci z pole lessons v plánu podle jejího id
         deleteLessonLocal: (state, action) => {
             const { lessonId } = action.payload;
             if (state.item && state.item.lessons) {

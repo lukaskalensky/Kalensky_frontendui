@@ -6,6 +6,11 @@ import { StudyPlanDetail } from "../Components";
 import { SelectionContext } from "../Components/SelectionContext";
 import { useState } from "react";
 
+// Vlastní GraphQL dotaz pro stránku detailu studijního plánu. Nahrazuje generický
+// dotaz z šablony/generátoru, protože potřebujeme natáhnout mnohem víc vnořených dat
+// najednou (semestr s tématy, každé téma se svými naplánovanými lekcemi, u reálných
+// lekcí i jména přiřazených učitelů/skupin/místností), aby StudyPlanDetail.jsx nemusel
+// dělat další dotazy na server jen kvůli zobrazení jednoho řádku lekce.
 const MujPokusQueryStr = `
 # 1. Základní fragmenty (Doplněné o potřebná data pro UI i Backend)
 fragment User on UserGQLModel {
@@ -210,7 +215,11 @@ query studyPlanById($id: UUID!) {
 }
 `;
 
+// Zpracuje textový GraphQL dotaz výše do podoby, kterou umí použít Apollo/gql klient
 const MujPokusQuery = createQueryStrLazy(MujPokusQueryStr);
+// Async akce (thunk) pro Redux, kterou se dotaz skutečně spustí — používá ji jak
+// tahle stránka (queryAsyncAction v PageItemBase níže), tak StudyPlanDetail.jsx
+// (reloadPlan), když potřebuje po lokální změně znovu natáhnout čerstvá data plánu
 export const FetchMojeDataAction = createAsyncGraphQLAction2(MujPokusQuery);
 
 // Přidá entitu do seznamu, pokud tam podle id ještě není
@@ -224,6 +233,12 @@ const removeById = (setList) => (id) => {
     setList((prev) => prev.filter((x) => x.id !== id));
 };
 
+// Stránka detailu studijního plánu (route pro /StudyPlanGQLModel/view/:id).
+// Kromě natažení dat přes FetchMojeDataAction a vykreslení StudyPlanDetail hlavně
+// zakládá a poskytuje SelectionContext — sdílený "košík" vybraných učitelů, místností
+// a skupin, do kterého se v MyCustomWidget (nahoře v `SubPage`) sbírají entity
+// vyhledané přes EntityLookup a ze kterého je pak StudyPlanDetail (`ItemLayout`) čte,
+// aby je šlo v LessonRow hromadně přiřadit ke konkrétní lekci jedním kliknutím.
 export const MujPokusPage = () => {
 
     // Místo jedné vybrané entity držíme pole -> umožňuje výběr více učitelů/místností/skupin najednou
@@ -231,7 +246,10 @@ export const MujPokusPage = () => {
     const [selectedRooms, setSelectedRooms] = useState([]);
     const [selectedGroups, setSelectedGroups] = useState([]);
 
-    // Vložíme je do jednoho objektu
+    // Vložíme je do jednoho objektu, který se pak jako jediná hodnota předá
+    // SelectionContext.Provider níže — tím ho dostanou všechny komponenty ve stromu
+    // (MyCustomWidget i StudyPlanDetail/LessonRow), aniž by se musel prop-drillovat
+    // přes všechny mezikomponenty ručně
     const contextValue = {
         selectedTeachers, addTeacher: addUnique(setSelectedTeachers), removeTeacher: removeById(setSelectedTeachers),
         selectedRooms, addRoom: addUnique(setSelectedRooms), removeRoom: removeById(setSelectedRooms),
