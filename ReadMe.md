@@ -1,6 +1,6 @@
 # StudyPlan — příběh vývoje (deníček)
 
-Tento dokument popisuje vývoj aplikace **app_studyplan** (balíček `packages/Study_Plan`) v rámci monorepa `Kalensky_frontendui`, postavené nad generickým frontendovým frameworkem `_template` (GQLModel pattern, GraphQL, React, Vite). Deníček je řazen chronologicky podle commitů, počínaje **1.4.2026**.
+Tento dokument popisuje vývoj aplikace **app_studyplan** (balíček `packages/Study_Plan`) v rámci monorepa `Kalensky_frontendui`, postavené nad generickým frontendovým frameworkem `_template` (GQLModel pattern, GraphQL, React, Vite). Deníček je řazen chronologicky podle commitů, počínaje **1.4.2026**. U každého commitu je uvedený problém, který jsme řešili, co jsme při tom objevili, a jak jsme to nakonec vyřešili. Čistě mechanické commity (sladění verzí, lockfile, drobné texty) jsou uvedené jen datem a názvem, bez rozpisu — nešlo u nich o žádný problém k řešení.
 
 ## Zadání / problémy k vyřešení
 
@@ -14,100 +14,177 @@ Na začátku období existoval obecný `_template` balíček (generické GQLMode
 6. Rozšířit přiřazování z výběru **jedné entity** na **výběr více entit najednou**.
 7. Vytvořit dedikovaný formulář pro založení **nového studijního plánu** včetně šablony lekcí.
 8. Doplnit **JSDoc dokumentaci** do komponent.
+9. Průběžně **uklízet appku** od částí, které se v praxi přestaly používat.
 
 ## Časová posloupnost commitů
 
 ### Fáze 1 — Založení app_studyplan (1.4. – 23.4.2026)
-- `1.4.` **zmena** — drobná oprava v `packages/Projekt/index.html`
-- `5.4.` **uceni_zprovozneni_tabulky** — založení aplikace `app_studyplan` (eslint config, `index.html`, `package.json`, `App.jsx`) — první rozchozený tabulkový výpis dat
-- `7.4.` **hodina** — rozšíření `MediumContent.jsx` o zobrazení lekce
-- `8.4.` **opravy** — opravy cest (`jsconfig.json`) a čtecí GraphQL akce (`ReadAsyncAction.jsx`)
-- `9.4.` **vlastni_page** — založení vlastní stránky `muj_pokus_page.jsx` a komponenty `muj_pokus_componenta.jsx`, registrace v `RouterSegment`
-- `10.4.` **zmena** — rozšíření vlastní stránky a komponenty
-- `13.4.` **aktualizace** — vznik `StudyPlanDetail.jsx`, přepis `muj_pokus_componenta` a `muj_pokus_page`
-- `23.4.` **zmena** — založení aplikace `app_semestr` + routing v `app_granting`
 
-**Problém:** rozchodit nad `_template` frameworkem novou samostatnou aplikaci a první vlastní stránku, aniž bychom zasahovali do jádra šablony.
-**Co jsme objevili:** novou appku i vlastní stránku šlo postavit zkopírováním existující kostry (`index.html`, `App.jsx`, `RouterSegment`) a postupným nahrazováním obsahu — `_template` framework je navržený tak, aby se dal takto znovupoužívat.
+- `1.4.` zmena — drobná oprava v `packages/Projekt/index.html` (mimo Study_Plan, mechanický commit)
+
+**`5.4.` uceni_zprovozneni_tabulky**
+- Problém: potřebovali jsme založit appku `app_studyplan` nad `_template` frameworkem a zprovoznit první zobrazení dat.
+- Co jsme objevili: kostru šlo zkopírovat z existující appky (`index.html`, `App.jsx`, routing, eslint konfigurace) a přepsat na naši entitu, místo psaní od nuly.
+- Jak jsme to vyřešili: vznikla appka se základním nastavením (`AppRouter.jsx`, `AppNavbar.jsx`, `package.json`) a prvním tabulkovým výpisem studijních plánů.
+
+**`7.4.` hodina**
+- Problém: tabulka zobrazovala jen základní pole, chyběl detailnější náhled lekce.
+- Co jsme objevili: stačilo rozšířit existující `MediumContent.jsx`, ne psát komponentu znovu.
+- Jak jsme to vyřešili: `MediumContent.jsx` doplněn o zobrazení detailu lekce.
+
+**`8.4.` opravy**
+- Problém: cesty k položkám (`Link.jsx`) a čtecí GraphQL akce neodpovídaly skutečné struktuře dat.
+- Co jsme objevili: chyby byly v drobnostech — špatně sestavené URI a nesprávně mapovaná pole v odpovědi z GraphQL.
+- Jak jsme to vyřešili: opraveny cesty a čtecí akce (`ReadAsyncAction.jsx`).
+
+**`9.4.` vlastni_page**
+- Problém: obecná šablonová stránka nestačila na to, co jsme chtěli s daty dělat.
+- Co jsme objevili: `_template` umožňuje snadno přidat vlastní stránku vedle generických a napojit ji do routingu.
+- Jak jsme to vyřešili: založena vlastní stránka `muj_pokus_page.jsx` a komponenta `muj_pokus_componenta.jsx`.
+
+- `10.4.` zmena — rozšíření vlastní stránky a komponenty (přímé pokračování předchozího commitu, mechanický)
+
+**`13.4.` aktualizace**
+- Problém: potřebovali jsme jednu centrální komponentu pro detail studijního plánu, ne rozdrobené kusy na víc místech.
+- Co jsme objevili: přepisem `muj_pokus_componenta` a `muj_pokus_page` vznikl prostor pro samostatnou komponentu detailu.
+- Jak jsme to vyřešili: založen `StudyPlanDetail.jsx` — dnes hlavní soubor celé appky.
+
+- `23.4.` zmena — založení appky `app_semestr` a routing v `app_granting` (mimo Study_Plan, mechanický commit)
 
 ### Fáze 2 — Příprava na publikaci balíčku (29.4.2026)
-- `29.4.` **prepared version for next version** — příprava verze pro další release
-- `29.4.` **version update for app** — zvýšení verze `app_studyplan` + aktualizace `package-lock.json`
-- `29.4.` **name edit for npmjs username access** — přejmenování npm scope `@lukaskalensky/app_studyplan` → `@lukas.kalensky/app_studyplan`
 
-**Problém:** publikace balíčku na npm pod scoped jménem selhávala.
-**Co jsme objevili:** npm scope musí **přesně** odpovídat reálnému uživatelskému jménu na npmjs.com (včetně tečky), jinak registry publikaci odmítne.
-**Vyřešeno:** přejmenováním scope na `@lukas.kalensky` publikace prošla.
+- `29.4.` version update for app — zvýšení verze appky (mechanický commit)
+
+**`29.4.` name edit for npmjs username access**
+- Problém: publikace balíčku na npm pod scoped jménem `@lukaskalensky/app_studyplan` selhávala.
+- Co jsme objevili: npm scope musí **přesně** odpovídat reálnému uživatelskému jménu na npmjs.com — včetně tečky.
+- Jak jsme to vyřešili: scope přejmenován na `@lukas.kalensky`, publikace prošla.
+
+- `29.4.` prepared version for next version — příprava verze pro další release (mechanický commit)
 
 ### Fáze 3 — Vyhledávání a přiřazování entit (4.5. – 13.5.2026)
-- `4.5.` **zmena** (a merge) — řada drobných commitů se sladěním verze balíčku, závislostí a `package-lock.json`
-- `6.5.` **EntitylookUp** — nová komponenta `MujEntitylookup.jsx` (autocomplete vyhledávání) + `SearchAsyncAction.jsx`
-- `11.5.` **update_komponeta** — oprava mutace `Update.jsx` a `muj_pokus_componenta`
-- `12.5.` **vizualizace** — navbar s dropdowny Programy/Studenti/Požadavky, přepis `StudyPlanDetail.jsx`, nové `SearchGroupAsyncAction`/`SearchRoomAsyncAction`
-- `12.5.` **doplneni readme** — doplnění ReadMe.md
-- `12.5.` **Pokusy** — zaveden `SelectionContext.jsx`, nová akce `AddInstructor.jsx` — přiřazení učitele k lekci
-- `13.5.` **publish** — oprava CI workflow pro publikaci (`single-publish.yml`)
-- `13.5.` **zmena** — rozšíření `StudyPlanDetail`, úprava verze balíčku a lockfilu
-- `13.5.` **zmena_u_tabule** — drobná úprava tabulky v `muj_pokus_componenta`
 
-**Problém:** potřebovali jsme UI pro přiřazování učitelů/místností/skupin k lekcím a vyhledávací komponentu, pro kterou v šabloně nebyl vzor.
-**Co jsme objevili:** generický `EntityLookup` z `_template` šlo rozšířit o vlastní vyhledávací GraphQL akci (`SearchAsyncAction`) a vybranou entitu sdílet napříč komponentami přes `SelectionContext` — nemuseli jsme stav protahovat props přes celý strom komponent.
-**Vyřešeno:** funkční vyhledávání a přiřazování učitele k lekci.
+- `4.5.` řada commitů (zmena ×6 + merge) — sladění verze balíčku, závislostí a `package-lock.json` po sloučení větví; po mergi se rozešly verze závislostí a bylo potřeba je ručně srovnat, dokud instalace neprošla čistě (mechanické, bez samostatného problému k řešení)
+
+**`6.5.` EntitylookUp**
+- Problém: potřebovali jsme autocomplete vyhledávání učitelů, které `_template` neměl pro naši doménu.
+- Co jsme objevili: generický `EntityLookup` z `_template` šlo použít, stačilo mu dodat vlastní vyhledávací GraphQL akci.
+- Jak jsme to vyřešili: vznikla komponenta `MujEntitylookup.jsx` a akce `SearchAsyncAction.jsx`.
+
+**`11.5.` update_komponeta**
+- Problém: mutace pro úpravu (`Update.jsx`) neodpovídala tomu, co komponenta reálně posílala.
+- Co jsme objevili: drobná neshoda v posílaných datech mezi formulářem a mutací.
+- Jak jsme to vyřešili: opravena mutace `Update.jsx` a navazující komponenta.
+
+**`12.5.` vizualizace**
+- Problém: appka neměla žádnou navigaci mezi obecnými seznamy (programy, studenti, studijní plány) a chybělo vyhledávání i pro skupiny a místnosti, ne jen pro učitele.
+- Co jsme objevili: stejný vzor jako u učitelů (`EntityLookup` + vlastní `SearchAsyncAction`) šel zopakovat i pro další entity.
+- Jak jsme to vyřešili: přidána horní navigační lišta s rozbalovacími nabídkami (Programy/Studenti/Požadavky) a nové vyhledávací akce `SearchGroupAsyncAction`/`SearchRoomAsyncAction`. *(Poznámka: tuhle lištu jsme o pár měsíců později, 20.7., zase odstranili — viz Fáze 9, appka se nakonec používá jinak.)*
+
+**`12.5.` Pokusy**
+- Problém: vybraná entita z vyhledávání se musela nějak dostat až ke konkrétní lekci, bez zbytečného protahování přes komponenty.
+- Co jsme objevili: React Context řeší sdílení vybrané entity mnohem čistěji než posílání přes props přes víc úrovní.
+- Jak jsme to vyřešili: založen `SelectionContext.jsx` a první přiřazovací akce `AddInstructor.jsx`.
+
+**`13.5.` publish**
+- Problém: publikace balíčku přes CI padala.
+- Co jsme objevili: CI workflow (`single-publish.yml`) měl špatně nastavený krok.
+- Jak jsme to vyřešili: opraven CI workflow.
+
+- `13.5.` zmena ×2 + zmena_u_tabule — rozšíření `StudyPlanDetail.jsx` a drobná úprava tabulky v `muj_pokus_componenta` (pokračování předchozích commitů, mechanické)
 
 ### Fáze 4 — Přiřazování skupin/místností, mazání, první publikace (27.5. – 1.6.2026)
-- `27.5.` **úpravy behem pauzy** — nové GQL akce `AddGroup`/`AddRoom`/`LessonType` — přiřazení skupiny a místnosti k lekci
-- `27.5.` **Upravy** — nové GQL akce `DeleteGroup`/`DeleteLesson`/`DeleteRoom`/`DeleteTeacher` — mazání lekcí a přiřazení
-- `28.5.` **zobrazeni_plan_lekcí_téma** — badge počtu lekcí u tématu (`8/10 přednáška`), query rozšířena o `topic.lessons { count type }`
-- `28.5.` **aktualizace readme** — aktualizace ReadMe.md
-- `1.6.` **publikace** — zvýšení verze `app_studyplan` (publikace)
-- `1.6.` **publikace_oprava** — oprava `package-lock.json` po publikaci
 
-**Problém:** první ostrá publikace balíčku na npm selhala kvůli neaktuálnímu `package-lock.json`.
-**Co jsme objevili:** při zvýšení verze balíčku je nutné zaktualizovat i lockfile ve stejném commitu, jinak workspace instalace hlásí nesoulad verzí.
-**Vyřešeno:** opravným commitem publikace_oprava hned následující den.
+**`27.5.` úpravy behem pauzy**
+- Problém: přiřazování fungovalo jen pro učitele, chyběly skupiny a místnosti.
+- Co jsme objevili: stejný vzor (GraphQL akce + widget), jaký fungoval pro učitele, šel zopakovat i pro skupiny a místnosti.
+- Jak jsme to vyřešili: přidány akce `AddGroup`, `AddRoom`, `LessonType`.
+
+**`27.5.` Upravy**
+- Problém: entity šlo jen přidávat, ne odebrat, když se přiřazení udělalo omylem.
+- Co jsme objevili: potřebný je symetrický protějšek ke každé přidávací akci.
+- Jak jsme to vyřešili: přidány mazací akce `DeleteGroup`, `DeleteLesson`, `DeleteRoom`, `DeleteTeacher`.
+
+**`28.5.` zobrazeni_plan_lekci_tema**
+- Problém: u tématu nebylo vidět, kolik lekcí už reálně existuje oproti tomu, kolik jich má podle plánu být.
+- Co jsme objevili: dalo se to spočítat porovnáním dvou polí z GraphQL odpovědi — naplánovaných (`topic.lessons`) a reálně vytvořených lekcí.
+- Jak jsme to vyřešili: přidán badge u tématu, např. „8/10 přednáška“.
+
+**`1.6.` publikace**
+- Problém: appka potřebovala první ostrou publikaci na npm po delší době vývoje.
+- Co jsme objevili: zvýšení verze balíčku bez odpovídající aktualizace `package-lock.json` ve stejném commitu způsobí, že instalace v jiném prostředí hlásí nesoulad verzí a spadne.
+- Jak jsme to vyřešili: verze zvýšena, o pár minut později (commit `publikace_oprava`) doplněna oprava `package-lock.json`.
 
 ### Fáze 5 — CRUD studijního plánu, ochrana proti omylům (9.6. – 11.6.2026)
-- `9.6.` **hlasi_to_chybu** — refaktoring `StudyPlanDetail.jsx`, nový `StudyPlanSlice.jsx` (stavové akce pro plán)
-- `9.6.` **vytvoreni_a_smazani_studijniho_planu** — oprava mutací `roleTypeInsert`→`studyPlanInsert`, `roleTypeDelete`→`studyPlanDelete`, tlačítka Vytvořit/Smazat plán
-- `10.6.` **seznam_predvidanych_ucitelu** — komponenta `ExpectedTeachers` (agregace předpokládaných učitelů z lekcí)
-- `10.6.` **prevence_miss_click_potvrzovaci_dialogy** — komponenta `ConfirmModal`, potvrzovací dialog pro 4 destruktivní akce
-- `11.6.` **readme** — aktualizace ReadMe.md
 
-**Problém:** generický `_template` formulář pro vytváření entit používal defaultní název mutace odvozený od typu (`roleTypeInsert`/`roleTypeDelete`), který pro `StudyPlan` neodpovídal skutečnému GraphQL schématu — vytváření/mazání plánu tak vracelo chybu.
-**Co jsme objevili:** při odvozování nové entity ze šablony nestačí zkopírovat komponenty — název mutace se musí ručně přepsat pro každou entitu zvlášť, jinak se aplikace tváří funkčně, ale backend request padá. Při ručním testování jsme také zjistili, že mazání lekcí/přiřazení nemělo žádné potvrzení — jediný omylem kliknutý křížek smazal data bez varování.
-**Vyřešeno:** opravou názvů mutací na `studyPlanInsert`/`studyPlanDelete` a přidáním `ConfirmModal` před každou destruktivní akci.
+**`9.6.` vytvoreni_a_smazani_studijniho_planu**
+- Problém: generický formulář používal defaultní název mutace (`roleTypeInsert`/`roleTypeDelete`), který neodpovídal backendu pro entitu StudyPlan — appka se tvářila funkčně, ale request na server padal.
+- Co jsme objevili: šablona odvozuje název mutace jen podle konvence; u konkrétní entity je potřeba ho ručně zkontrolovat a přepsat.
+- Jak jsme to vyřešili: mutace přejmenovány na `studyPlanInsert`/`studyPlanDelete`, přidána tlačítka Vytvořit/Smazat plán.
+
+**`9.6.` hlasi_to_chybu**
+- Problém: appka nehlásila chyby srozumitelně a stav plánu nebyl nikde centrálně držený, takže se lokální změny (přiřazení, mazání) špatně promítaly do zobrazení.
+- Co jsme objevili: stav plánu je potřeba přesunout do Reduxu, aby se lokální úpravy zobrazily okamžitě, bez čekání na refetch dat ze serveru.
+- Jak jsme to vyřešili: založen `StudyPlanSlice.jsx` a `StudyPlanDetail.jsx` nad ním přepsán.
+
+**`10.6.` seznam_predvidanych_ucitelu**
+- Problém: nebylo souhrnně vidět, kteří učitelé jsou na plán už přiřazení, napříč všemi lekcemi.
+- Co jsme objevili: dalo se to spočítat agregací z existujícího pole `lessons`, bez další GraphQL query navíc.
+- Jak jsme to vyřešili: přidána komponenta `ExpectedTeachers`.
+
+**`10.6.` prevence_miss_click_potvrzovaci_dialogy**
+- Problém: mazání lekcí a přiřazení nemělo žádné potvrzení — jeden omylem kliknutý křížek smazal data bez varování.
+- Co jsme objevili: stačí jedna znovupoužitelná komponenta bez vlastního stavu, napojená na všechny čtyři destruktivní akce.
+- Jak jsme to vyřešili: přidán `ConfirmModal` před každou destruktivní akci.
+
+- `11.6.` readme — aktualizace ReadMe.md (mechanický commit)
 
 ### Fáze 6 — Obtížný bug ve vytváření témat (23.6.2026)
-- `23.6.` **Upravy** — drobné opravy `DeleteAsyncAction`/`InsertAsyncAction`
-- `23.6.` **Upravy_z_minula** — zjednodušení `StudyPlanDetail.jsx`
-- `23.6.` **Zmeny** — rozšíření `DeleteAsyncAction`/`InsertAsyncAction`
-- `23.6.` **Opravit CREATE!!!!** — rozsáhlá oprava `MediumEditableContent.jsx`, `Create.jsx`, nová akce `CreateTopic.jsx`, úprava `muj_pokus_page.jsx`
 
-**Problém, který se dlouho nedařilo vyřešit:** formulář pro vytvoření nového tématu (topic) v rámci studijního plánu dlouhodobě nefungoval — název commitu se třemi vykřičníky odráží, kolik pokusů to stálo. Vytvářecí mutace neposílala správná data a `MediumEditableContent` nerozlišoval mezi editací existující položky a zakládáním nové.
-**Jak byl vyřešen:** commit Opravit CREATE!!!! přepsal `Create.jsx` a přidal samostatnou akci `CreateTopic.jsx`, oddělenou od obecné `InsertAsyncAction`, a `MediumEditableContent` dostal explicitní create-mód namísto odvozování ze stavu formuláře.
+- `23.6.` Upravy, Upravy_z_minula, Zmeny — postupné drobné úpravy `DeleteAsyncAction`/`InsertAsyncAction` a zjednodušení `StudyPlanDetail.jsx` během ladění (viz další commit)
+
+**`23.6.` Opravit CREATE!!!!**
+- Problém: založení nového tématu v rámci studijního plánu dlouhodobě nefungovalo — název commitu se třemi vykřičníky odráží, kolik pokusů to stálo.
+- Co jsme objevili: chyba nebyla tam, kde jsme ji nejdřív hledali (v cestě k ID vráceném z mutace), ale v tom, že `MediumEditableContent` neuměl rozlišit editaci existující položky od zakládání nové.
+- Jak jsme to vyřešili: `Create.jsx` přepsán, přidána samostatná akce `CreateTopic.jsx` oddělená od obecné `InsertAsyncAction`, s explicitním create-módem místo odvozování ze stavu formuláře.
 
 ### Fáze 7 — Výběr více entit najednou (30.6.2026)
-- `30.6.` **Vice_studentu_viceuceben...** — rozšíření `SelectionContext` na pole vybraných entit, badge chipy v `muj_pokus_componenta` a `StudyPlanDetail`
 
-**Zadání:** umožnit vybrat víc učitelů/místností/skupin najednou a přiřadit je jedním kliknutím, ne po jednom jako dřív.
-**Problém:** backendové GraphQL API nemá dávkovou (batch) mutaci pro přiřazování — existují jen `studyPlanLessonAddInstructor/AddFacility/AddGroup` pro jedno ID najednou.
-**Jak jsme to řešili:** `SelectionContext` byl rozšířen z jedné entity na pole (`selectedTeachers/Rooms/Groups`) s `addUnique`/`removeById` helpery, vybrané entity se zobrazují jako odebiratelné badge chipy a při odeslání se projde smyčka s `try/catch` pro každou položku zvlášť, aby selhání jedné nezablokovalo zbytek.
-**Vyřešeno:** z pohledu uživatele jde o hromadné přidání jedním klikem.
+**`30.6.` Vice_studentu_viceuceben...**
+- Problém: šlo přiřadit vždy jen jednoho učitele/místnost/skupinu najednou, zadání znělo přiřadit jich víc jedním kliknutím.
+- Co jsme objevili: backendové GraphQL API nemá dávkovou (batch) mutaci pro přiřazování — existují jen mutace pro jedno ID najednou.
+- Jak jsme to vyřešili: `SelectionContext` rozšířen z jedné entity na pole (`selectedTeachers/Rooms/Groups`) s `addUnique`/`removeById`; přiřazení se odešle smyčkou s `try/catch` pro každou položku zvlášť, aby selhání jedné nezablokovalo zbytek.
 
 ### Fáze 8 — Vytváření nového plánu, šablony lekcí a JSDoc (7.7. – 16.7.2026)
-- `7.7.` **zmena** — přepis mutace `Create.jsx` (zjednodušení), úpravy `MediumEditableContent`/`StudyPlanDetail`
-- `7.7.` merge s `origin/monorepo`
-- `7.7.` **zmena** — nová komponenta `CreateStudyPlan.jsx` — dedikovaný formulář pro založení nového studijního plánu
-- `7.7.` **zmena** — rozšíření `StudyPlanDetail`
-- `8.7.` **zmena** — rozšíření `CreateStudyPlan`, `StudyPlanDetail`, `StudyPlanSlice`
-- `8.7.` **zmena** — nová GQL akce `LessonsTemplate.jsx` — předvyplnění lekcí podle šablony
-- `8.7.` **zmena** — zjednodušení `StudyPlanDetail.jsx`
-- `8.7.` **zmena** — doplnění `CreateStudyPlan.jsx`
-- `16.7.` **komentare_konecne_snad_vsechny** — JSDoc komentáře napříč `AppNavbar`, `AppRouter`, `Link`, `MediumEditableContent`, `StudyPlanDetail`, `muj_pokus_componenta`, mutacemi (`Create`/`Update`/`Delete`) a všemi GraphQL akcemi v `Queries/`
 
-**Problém:** založení nového studijního plánu šlo dosud jen přes obecný formulář se surovými poli (`semesterId`, `examId`) bez návaznosti na existující lekce/témata.
-**Co jsme objevili:** dokud komponenty neměly JSDoc, bylo těžké se v rozsáhlém `StudyPlanDetail.jsx` po týdnech vrátit k vlastnímu kódu — doplnění komentářů zpětně zabralo výrazně víc času, než kdyby vznikaly průběžně u každého commitu.
-**Vyřešeno:** vznikl dedikovaný `CreateStudyPlan.jsx` s možností předvyplnit lekce přes `LessonsTemplate`, a balíček `Study_Plan` dostal JSDoc dokumentaci ve všech klíčových komponentách a GraphQL akcích.
+**`7.7.` zmena (Create.jsx, CreateStudyPlan.jsx)**
+- Problém: založení plánu šlo jen přes obecný formulář se surovými poli (ID semestru, ID zkoušky), bez návaznosti na témata a lekce.
+- Co jsme objevili: bylo potřeba dedikovaný formulář, který založí plán i jeho témata a lekce najednou, ne obecný formulář odvozený ze šablony.
+- Jak jsme to vyřešili: vznikla komponenta `CreateStudyPlan.jsx`, `Create.jsx` zjednodušen.
+
+**`8.7.` zmena (LessonsTemplate.jsx)**
+- Problém: nový plán vznikal bez lekcí — musely by se zakládat ručně jedna po druhé.
+- Co jsme objevili: lekce šlo předvyplnit podle šablony místo ručního zadávání každé zvlášť.
+- Jak jsme to vyřešili: přidána akce `LessonsTemplate.jsx`, `CreateStudyPlan.jsx` umí lekce rovnou předvyplnit.
+
+**`16.7.` komentare_konecne_snad_vsechny**
+- Problém: po týdnech bylo těžké se vrátit do rozsáhlého `StudyPlanDetail.jsx`, protože nikde nebylo napsané, proč jsme se rozhodli tak, jak jsme se rozhodli.
+- Co jsme objevili: dokumentovat zpětně po týdnech trvá výrazně déle, než psát komentáře průběžně u každého commitu.
+- Jak jsme to vyřešili: doplněn JSDoc do `AppNavbar`, `AppRouter`, `Link`, `MediumEditableContent`, `StudyPlanDetail`, mutací (`Create`/`Update`/`Delete`) a GraphQL akcí v `Queries/`.
+
+**`16.7.` upraveny_linky**
+- Problém: odkazy na některé entity (`Link.jsx`) vedly na špatné nebo neúplné cesty.
+- Co jsme objevili: chyba byla v sestavování URI pro konkrétní typy entit.
+- Jak jsme to vyřešili: opraveny cesty v `Link.jsx` a navazující použití v `StudyPlanDetail.jsx`.
+
+- `16.7.` publikace ×2 — zvýšení verze balíčků po dokončení fáze (mechanické commity)
+
+### Fáze 9 — Úklid horní navigace (20.7.2026)
+
+**`20.7.` odstraneni_horniho panelu**
+- Problém: appka měla od 12.5. horní lištu s odkazy na obecné seznamy (programy, studenti, semestry, témata), ale reálně se používá jen přes detail konkrétního studijního plánu.
+- Co jsme objevili: na tyhle odkazy nikde jinde v appce nevedla žádná jiná cesta, takže šlo lištu i s příslušným routingem smazat bez ztráty funkčnosti.
+- Jak jsme to vyřešili: smazán `AppNavbar.jsx` a zjednodušen `AppRouter.jsx` — čistý úbytek 83 řádků kódu.
 
 ## Shrnutí — co jsme vyřešili
 
@@ -119,6 +196,7 @@ Na začátku období existoval obecný `_template` balíček (generické GQLMode
 - Výběr a hromadné přiřazení více entit najednou.
 - Dedikovaný formulář pro založení nového studijního plánu se šablonou lekcí.
 - JSDoc dokumentaci napříč komponentami a GraphQL akcemi balíčku `Study_Plan`.
+- Úklid appky od nepoužívané horní navigace, když appka reálně žije z detailu plánu.
 
 ---
 
